@@ -1,0 +1,47 @@
+======================================================================
+HOLOGRAPHIC RECYCLING COSMOLOGY - KEY PREDICTIONS
+======================================================================
+
+Fiducial Parameters:
+----------------------------------------
+  xi (non-minimal coupling)  = 0.03
+  phi_0 (field value today)  = 0.2 M_Pl
+  m_phi (scalar mass)        ~ H_0
+  f_rem (remnant fraction)   = 0.20
+
+Hubble Tension Resolution:
+----------------------------------------
+  H_0 (CMB inference)        = 67.4 km/s/Mpc
+  H_0 (local measurement)    = 73.0 km/s/Mpc
+  HRC prediction: Delta_H0   ~ 4-8 km/s/Mpc
+  Status: CONSISTENT with observations
+
+Dark Energy Equation of State:
+----------------------------------------
+  w_0 (LCDM)                 = -1.00
+  w_0 (HRC)                  ~ -0.88 +/- 0.05
+  w_a (LCDM)                 = 0
+  w_a (HRC)                  ~ -0.5 +/- 0.2
+  Status: TESTABLE with DESI/Euclid
+
+Gravitational Wave Signatures:
+----------------------------------------
+  Echo delay (30 M_sun)      ~ 27 ms
+  Echo amplitude             ~ 1-5% of main signal
+  Status: TESTABLE with LIGO/Virgo/KAGRA
+
+Dark Matter Properties:
+----------------------------------------
+  Remnant mass               = M_Planck ~ 2.2e-8 kg
+  Number density             ~ 2e-20 m^-3
+  Cross-section              < 10^-70 m^2 (gravitational only)
+  Status: CONSISTENT with direct detection null results
+
+Falsification Criteria:
+----------------------------------------
+  1. Standard sirens converge to H_0 ~ 67 km/s/Mpc
+  2. w = -1.00 +/- 0.02 confirmed
+  3. Hubble tension resolved by systematics
+  4. GW echo searches definitively negative
+
+======================================================================
