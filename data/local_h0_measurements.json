@@ -1,0 +1,63 @@
+{
+    "measurements": [
+        {
+            "name": "SH0ES 2024",
+            "reference": "Riess et al. 2024",
+            "H0": 73.04,
+            "error": 1.04,
+            "method": "Cepheid-calibrated SNe Ia",
+            "systematic_error": 0.9
+        },
+        {
+            "name": "TRGB Carnegie-Chicago",
+            "reference": "Freedman et al. 2024",
+            "H0": 69.8,
+            "error": 1.7,
+            "method": "TRGB-calibrated SNe Ia",
+            "systematic_error": 1.5
+        },
+        {
+            "name": "TDCOSMO",
+            "reference": "TDCOSMO Collaboration 2024",
+            "H0": 73.3,
+            "error": 3.3,
+            "method": "Time-delay cosmography",
+            "systematic_error": 2.0
+        },
+        {
+            "name": "Miras",
+            "reference": "Huang et al. 2024",
+            "H0": 73.3,
+            "error": 4.0,
+            "method": "Mira-calibrated SNe Ia",
+            "systematic_error": 3.0
+        },
+        {
+            "name": "Surface Brightness Fluctuations",
+            "reference": "Blakeslee et al. 2021",
+            "H0": 73.3,
+            "error": 2.5,
+            "method": "SBF distance ladder",
+            "systematic_error": 1.5
+        },
+        {
+            "name": "Megamasers",
+            "reference": "Pesce et al. 2020",
+            "H0": 73.9,
+            "error": 3.0,
+            "method": "H2O megamaser distances",
+            "systematic_error": 2.5
+        }
+    ],
+    "combined_local": {
+        "weighted_mean": 72.5,
+        "weighted_error": 0.9,
+        "note": "Weighted average of distance ladder methods"
+    },
+    "tension_with_planck": {
+        "delta_H0": 5.1,
+        "combined_sigma": 1.16,
+        "tension_significance": 4.4,
+        "note": "Using SH0ES 2022 vs Planck 2018"
+    }
+}

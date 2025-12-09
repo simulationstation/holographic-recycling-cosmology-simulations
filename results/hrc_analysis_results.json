@@ -1,0 +1,145 @@
+{
+  "parameters": {
+    "H0_true": 70.0,
+    "Omega_m": 0.315,
+    "Omega_b": 0.049,
+    "Omega_rem": 0.05,
+    "xi": 0.03,
+    "alpha": 0.01,
+    "phi_0": 0.2,
+    "f_remnant": 0.2
+  },
+  "theory": {
+    "G_eff_values": {
+      "z=0.0": 0.84920355262769,
+      "z=0.5": 0.8498137417181549,
+      "z=1.0": 0.8502451797759929,
+      "z=2.0": 0.8508511539825313,
+      "z=1089.0": 0.8593897938090165
+    },
+    "G_eff_ratio_0_to_1100": 1.0119950524815955
+  },
+  "dynamics": {
+    "remnant_mass_kg": 2.176434342051127e-08,
+    "remnant_mass_g": 2.176434342051127e-05,
+    "remnant_mass_Planck": 1.0,
+    "bh_mass_function": {
+      "1 M_sun": 1e-06,
+      "10 M_sun": 0.0001,
+      "100 M_sun": 1e-05
+    },
+    "remnant_fraction": 0.2
+  },
+  "observations": {
+    "bao_comparison": [
+      {
+        "z": 0.295,
+        "observed": 7.93,
+        "lcdm": 8.052795319157545,
+        "hrc": 7.144878077804877
+      },
+      {
+        "z": 0.51,
+        "observed": 13.62,
+        "lcdm": 12.82776340894057,
+        "hrc": 11.381083616374719
+      },
+      {
+        "z": 0.706,
+        "observed": 16.85,
+        "lcdm": 16.455465525838594,
+        "hrc": 14.599184258407648
+      },
+      {
+        "z": 0.93,
+        "observed": 21.71,
+        "lcdm": 19.88587681946993,
+        "hrc": 17.641975212337623
+      },
+      {
+        "z": 1.317,
+        "observed": 27.79,
+        "lcdm": 24.422549678620822,
+        "hrc": 21.665441032020226
+      }
+    ],
+    "H0_comparison": {
+      "planck": 67.4,
+      "shoes": 73.04,
+      "hrc_local": 75.96,
+      "hrc_cmb": 69.67,
+      "tension_lcdm_sigma": 5.0,
+      "tension_hrc_sigma": 0.0
+    }
+  },
+  "signatures": {
+    "cmb": {
+      "delta_z_star": 1.307517016610532,
+      "delta_theta_arcmin": -2.979917834536552,
+      "delta_ell_1": 15.128499865343713
+    },
+    "expansion": {
+      "H0_local": 75.96125630800304,
+      "H0_cmb": 69.66811945506939,
+      "tension_resolved": true,
+      "w0": -1.0787516635604737,
+      "wa": 0.9604851204100073
+    },
+    "gw": {
+      "echo_time_30_ms": 27.049716236988854,
+      "qnm_shift_percent": 17.75739714061496
+    },
+    "dm": {
+      "M_remnant_kg": 2.176434342051127e-08,
+      "n_remnant_m3": 2.0777102771399727e-20,
+      "theta_E_arcsec": 7.24081832852851e-23
+    }
+  },
+  "summary": {
+    "summary": {
+      "total_signatures": 6,
+      "already_observed": 1,
+      "potentially_detectable": 4,
+      "very_difficult": 1
+    },
+    "top_tests": [
+      {
+        "rank": 1,
+        "test": "Standard siren Hubble diagram",
+        "probe": "LIGO/Virgo/KAGRA + EM counterparts",
+        "hrc_prediction": "H\u2080 from GW should match local distance ladder",
+        "discriminating_power": "HIGH - direct test of G_eff(z)",
+        "current_precision": "~15% per event",
+        "future_precision": "~2% with O(50) events",
+        "timeline": "3-5 years",
+        "uniqueness": "HIGH - geometry-independent distance"
+      },
+      {
+        "rank": 2,
+        "test": "Multi-probe H\u2080 comparison",
+        "probe": "CMB + BAO + SNe + lensing",
+        "hrc_prediction": "Different probes give systematically different H\u2080",
+        "discriminating_power": "HIGH - pattern unique to HRC",
+        "current_precision": "~1-3% per method",
+        "future_precision": "<1% with DESI + Rubin",
+        "timeline": "1-3 years",
+        "uniqueness": "MEDIUM - other models can also explain tension"
+      },
+      {
+        "rank": 3,
+        "test": "Dark energy equation of state",
+        "probe": "DESI BAO + Rubin SNe",
+        "hrc_prediction": "Specific w\u2080-w\u2090 trajectory",
+        "discriminating_power": "MEDIUM - degenerate with quintessence",
+        "current_precision": "w\u2080 \u00b1 0.06, w\u2090 \u00b1 0.3",
+        "future_precision": "w\u2080 \u00b1 0.02, w\u2090 \u00b1 0.1",
+        "timeline": "2-5 years",
+        "uniqueness": "MEDIUM"
+      }
+    ]
+  },
+  "metadata": {
+    "timestamp": "2025-12-09T12:10:50.068054",
+    "version": "1.0.0"
+  }
+}
