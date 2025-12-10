@@ -31,6 +31,8 @@ class TestScenario:
         phi0_range: (min, max) for initial field value
         nx: Number of xi grid points
         nphi: Number of phi0 grid points
+        alpha_rec: Thermal horizon recycling fraction (0 <= alpha_rec < 1)
+        gamma_rec: Horizon-driven effective potential strength (V_eff = V0 + gamma_rec * H^4 * phi^2 / 2)
     """
     id: str
     description: str
@@ -42,6 +44,8 @@ class TestScenario:
     phi0_range: Tuple[float, float] = (0.0, 0.3)
     nx: int = 5
     nphi: int = 5
+    alpha_rec: float = 0.0  # Thermal horizon recycling fraction
+    gamma_rec: float = 0.0  # Horizon-driven effective potential strength
 
 
 # ============================================================================
@@ -77,9 +81,24 @@ TEST_SCENARIOS: List[TestScenario] = [
         nphi=5,
     ),
 
-    # T03: Exponential coupling
+    # T03: Thermal horizon recycling with quadratic coupling
     TestScenario(
-        id="T03_exponential_coupling",
+        id="T03_thermo_horizon_recycling",
+        description="Thermal horizon recycling: H^2 -> H^2/(1-alpha_rec) with quadratic coupling",
+        coupling_family=CouplingFamily.QUADRATIC,
+        potential_type=PotentialType.QUADRATIC,
+        coupling_params={},
+        z_max=1100.0,
+        xi_range=(1e-5, 5e-3),
+        phi0_range=(0.0, 0.3),
+        nx=5,
+        nphi=5,
+        alpha_rec=0.05,  # 5% recycling fraction
+    ),
+
+    # T07: Exponential coupling
+    TestScenario(
+        id="T07_exponential_coupling",
         description="Exponential coupling f(phi) = exp(beta*phi/M_pl)",
         coupling_family=CouplingFamily.EXPONENTIAL,
         potential_type=PotentialType.QUADRATIC,
@@ -91,9 +110,25 @@ TEST_SCENARIOS: List[TestScenario] = [
         nphi=5,
     ),
 
-    # T04: Linear coupling (HRC 1.x style)
+    # T04: Horizon-driven effective potential
     TestScenario(
-        id="T04_linear_coupling",
+        id="T04_horizon_driven_potential",
+        description="Horizon-driven effective potential: V_eff = V0 + gamma_rec * H^4 * phi^2 / 2",
+        coupling_family=CouplingFamily.QUADRATIC,
+        potential_type=PotentialType.QUADRATIC,
+        coupling_params={},
+        z_max=1100.0,
+        xi_range=(1e-5, 5e-3),
+        phi0_range=(0.0, 0.3),
+        nx=5,
+        nphi=5,
+        alpha_rec=0.0,
+        gamma_rec=1e-3,  # Horizon-driven effective potential strength
+    ),
+
+    # T08: Linear coupling (HRC 1.x style)
+    TestScenario(
+        id="T08_linear_coupling",
         description="Linear coupling f(phi) = M_pl^2 - alpha*phi (HRC 1.x style)",
         coupling_family=CouplingFamily.LINEAR,
         potential_type=PotentialType.QUADRATIC,
@@ -105,9 +140,28 @@ TEST_SCENARIOS: List[TestScenario] = [
         nphi=5,
     ),
 
-    # T05: Plateau_evap with larger mu (wider transition)
+    # T05: Early Dark Energy (EDE) fluid - special scenario with custom runner
     TestScenario(
-        id="T05_evap_wide_transition",
+        id="T05_EDE_fluid",
+        description=(
+            "Phenomenological Early Dark Energy (EDE) fluid added to GR Friedmann. "
+            "Scan over f_EDE at fixed z_c to see early-density fractions."
+        ),
+        coupling_family=CouplingFamily.QUADRATIC,  # irrelevant, we use xi=0, phi0=0
+        potential_type=PotentialType.QUADRATIC,
+        coupling_params={},
+        z_max=1100.0,
+        xi_range=(0.0, 0.0),   # not used - EDE scenario bypasses xi scan
+        phi0_range=(0.0, 0.0), # not used - EDE scenario bypasses phi0 scan
+        nx=1,
+        nphi=1,
+        alpha_rec=0.0,
+        gamma_rec=0.0,
+    ),
+
+    # T09: Plateau_evap with larger mu (wider transition)
+    TestScenario(
+        id="T09_evap_wide_transition",
         description="Evaporated-boundary with wider transition (mu=0.3)",
         coupling_family=CouplingFamily.PLATEAU_EVAP,
         potential_type=PotentialType.QUADRATIC,
@@ -119,9 +173,9 @@ TEST_SCENARIOS: List[TestScenario] = [
         nphi=5,
     ),
 
-    # T06: Plateau_evap with narrower mu (sharper transition)
+    # T10: Plateau_evap with narrower mu (sharper transition)
     TestScenario(
-        id="T06_evap_narrow_transition",
+        id="T10_evap_narrow_transition",
         description="Evaporated-boundary with narrower transition (mu=0.05)",
         coupling_family=CouplingFamily.PLATEAU_EVAP,
         potential_type=PotentialType.QUADRATIC,
@@ -131,6 +185,26 @@ TEST_SCENARIOS: List[TestScenario] = [
         phi0_range=(0.0, 0.3),
         nx=5,
         nphi=5,
+    ),
+
+    # T06: Nonlocal horizon-memory Friedmann correction - special scenario with custom runner
+    TestScenario(
+        id="T06_horizon_memory_nonlocal",
+        description=(
+            "Nonlocal horizon-memory Friedmann correction: "
+            "background GR with extra rho_hor(a) from a memory field M(a) "
+            "tracking smoothed horizon entropy S_norm."
+        ),
+        coupling_family=CouplingFamily.QUADRATIC,  # irrelevant, we use xi=0, phi0=0
+        potential_type=PotentialType.QUADRATIC,
+        coupling_params={},
+        z_max=1100.0,
+        xi_range=(0.0, 0.0),   # not used - horizon memory scenario bypasses xi scan
+        phi0_range=(0.0, 0.0), # not used - horizon memory scenario bypasses phi0 scan
+        nx=1,
+        nphi=1,
+        alpha_rec=0.0,
+        gamma_rec=0.0,
     ),
 ]
 

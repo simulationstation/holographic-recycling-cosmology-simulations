@@ -215,6 +215,21 @@ class HRC2Parameters:
     Omega_r0: float = 9e-5  # Radiation density
     H0: float = 70.0  # Hubble constant (km/s/Mpc)
 
+    # Thermal horizon recycling parameter
+    alpha_rec: float = 0.0  # Recycling fraction: 0 <= alpha_rec < 1
+
+    # Horizon-driven effective potential parameter
+    gamma_rec: float = 0.0  # V_eff = V0(phi) + gamma_rec * H^4 * (1/2) * phi^2
+
+    # Early Dark Energy (EDE) fluid parameters
+    f_EDE: float = 0.0      # approximate peak fractional contribution at z_c
+    z_c: float = 3000.0     # characteristic EDE peak redshift
+    sigma_ln_a: float = 0.5 # width of the EDE bump in ln(a)
+
+    # Nonlocal horizon-memory parameters
+    lambda_hor: float = 0.0  # amplitude of horizon-memory energy density
+    tau_hor: float = 1.0     # memory timescale in ln(a)
+
     # Custom functions (for CUSTOM types)
     custom_F: Optional[Callable[[float], float]] = None
     custom_dF: Optional[Callable[[float], float]] = None

@@ -121,6 +121,8 @@ def evaluate_model_point(
     z_max: float = 1100.0,
     z_points: int = 300,
     constraint_level: str = "conservative",
+    alpha_rec: float = 0.0,
+    gamma_rec: float = 0.0,
 ) -> SinglePointResult:
     """Evaluate a single model point in the parameter space.
 
@@ -135,6 +137,8 @@ def evaluate_model_point(
         z_max: Maximum redshift
         z_points: Number of redshift points
         constraint_level: BBN constraint level
+        alpha_rec: Thermal horizon recycling fraction (0 <= alpha_rec < 1)
+        gamma_rec: Horizon-driven effective potential strength
 
     Returns:
         SinglePointResult with evaluation results
@@ -162,6 +166,8 @@ def evaluate_model_point(
             beta=xi,
             phi_0=phi0,
             phi_dot_0=0.0,
+            alpha_rec=alpha_rec,
+            gamma_rec=gamma_rec,
         )
 
         # Create model and solve
@@ -369,6 +375,8 @@ def run_xi_tradeoff_parallel(
     z_points: int = 300,
     constraint_level: str = "conservative",
     verbose: bool = True,
+    alpha_rec: float = 0.0,
+    gamma_rec: float = 0.0,
 ) -> XiTradeoffResultHRC2:
     """Run parallel xi-tradeoff scan using ProcessPoolExecutor.
 
@@ -382,6 +390,8 @@ def run_xi_tradeoff_parallel(
         z_points: Number of redshift points
         constraint_level: BBN constraint level
         verbose: Print progress
+        alpha_rec: Thermal horizon recycling fraction (0 <= alpha_rec < 1)
+        gamma_rec: Horizon-driven effective potential strength
 
     Returns:
         XiTradeoffResultHRC2 with scan results
@@ -408,7 +418,7 @@ def run_xi_tradeoff_parallel(
                 evaluate_model_point,
                 xi, phi0,
                 coupling_family, potential_type, perf,
-                z_max, z_points, constraint_level
+                z_max, z_points, constraint_level, alpha_rec, gamma_rec
             ): (xi, phi0)
             for (xi, phi0) in tasks
         }

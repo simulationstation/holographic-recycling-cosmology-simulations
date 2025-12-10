@@ -33,6 +33,7 @@ from hrc2.analysis.xi_tradeoff import run_xi_tradeoff_parallel, XiTradeoffResult
 from hrc2.analysis.test_scenarios import TEST_SCENARIOS, TestScenario, get_scenario_by_id, list_scenario_ids
 from hrc2.plots.xi_tradeoff import plot_xi_tradeoff_hrc2
 from hrc2.constraints.observational import estimate_delta_H0
+from hrc2.background import BackgroundCosmology
 
 
 def build_grid(xi_range, phi0_range, nx, nphi):
@@ -153,6 +154,314 @@ def plot_scenario_results(result: XiTradeoffResultHRC2, scenario: TestScenario, 
     plt.close(fig)
 
 
+def run_ede_fluid_scenario(scenario: TestScenario) -> bool:
+    """Run the EDE fluid scenario (T05) with a custom f_EDE scan.
+
+    This function bypasses the standard xi/phi0 scan and instead scans
+    over f_EDE values at fixed z_c, using pure GR (xi=0, phi0=0).
+
+    Returns:
+        True if completed successfully, False if skipped or failed
+    """
+    base_results_dir = os.path.join("results", "tests", scenario.id)
+    os.makedirs(base_results_dir, exist_ok=True)
+
+    status_path = os.path.join(base_results_dir, "status.json")
+
+    # Check if already completed (skip)
+    if os.path.exists(status_path):
+        with open(status_path, "r") as f:
+            status = json.load(f)
+        if status.get("completed"):
+            print(f"[SKIP] {scenario.id} already completed")
+            return False
+
+    print()
+    print("=" * 70)
+    print(f"Running EDE scenario: {scenario.id}")
+    print(f"Description: {scenario.description}")
+    print("=" * 70)
+
+    start_time = time.time()
+
+    # Scan over f_EDE values (5 points from 0 to 0.05)
+    f_EDE_values = np.linspace(0.0, 0.05, 5)
+    z_c = 3000.0  # Fixed characteristic EDE peak redshift
+    sigma_ln_a = 0.5  # Fixed width
+
+    results = []
+    a_BBN = 1e-9  # Scale factor at BBN
+
+    for f_EDE in f_EDE_values:
+        # Create HRC2Parameters with pure GR (xi=0) and EDE params
+        params = HRC2Parameters(
+            xi=0.0,
+            phi_0=0.0,
+            coupling_family=CouplingFamily.QUADRATIC,
+            potential_type=PotentialType.QUADRATIC,
+            f_EDE=f_EDE,
+            z_c=z_c,
+            sigma_ln_a=sigma_ln_a,
+        )
+
+        # Create BackgroundCosmology instance
+        cosmo = BackgroundCosmology(params)
+
+        # Compute scale factor at z_c
+        a_c = 1.0 / (1.0 + z_c)
+
+        # Evaluate densities at a_c
+        rho_ede_ac = cosmo.rho_EDE_component(a_c)
+        rho_tot_ac = cosmo.total_density(a_c)
+
+        # Effective f_EDE at z_c
+        f_EDE_eff = rho_ede_ac / rho_tot_ac if rho_tot_ac > 0 else 0.0
+
+        # BBN check: require rho_EDE << rho_rad at a_BBN
+        rho_rad_bbn = cosmo.radiation_density(a_BBN)
+        rho_ede_bbn = cosmo.rho_EDE_component(a_BBN)
+        bbn_ok = rho_ede_bbn < 0.1 * rho_rad_bbn
+
+        result_entry = {
+            "f_EDE_input": float(f_EDE),
+            "f_EDE_eff": float(f_EDE_eff),
+            "rho_EDE_at_zc": float(rho_ede_ac),
+            "rho_tot_at_zc": float(rho_tot_ac),
+            "rho_EDE_at_BBN": float(rho_ede_bbn),
+            "rho_rad_at_BBN": float(rho_rad_bbn),
+            "BBN_ok": bool(bbn_ok),
+        }
+        results.append(result_entry)
+
+        print(f"  f_EDE={f_EDE:.3f}: f_EDE_eff={f_EDE_eff:.4f}, BBN_ok={bbn_ok}")
+
+    elapsed = time.time() - start_time
+
+    # Find best result (highest f_EDE_eff that passes BBN)
+    best = None
+    best_f_eff = 0.0
+    for r in results:
+        if r["BBN_ok"] and r["f_EDE_eff"] > best_f_eff:
+            best_f_eff = r["f_EDE_eff"]
+            best = r
+
+    # Write status.json
+    status = {
+        "id": scenario.id,
+        "description": scenario.description,
+        "coupling_family": scenario.coupling_family.value,
+        "potential_type": scenario.potential_type.value,
+        "z_c": z_c,
+        "sigma_ln_a": sigma_ln_a,
+        "completed": True,
+        "timestamp": datetime.now().isoformat(),
+        "elapsed_seconds": elapsed,
+        "n_points": len(f_EDE_values),
+        "n_bbn_ok": sum(1 for r in results if r["BBN_ok"]),
+        "max_f_EDE_eff": best_f_eff,
+        "scan_results": results,
+    }
+
+    with open(status_path, "w") as f:
+        json.dump(status, f, indent=2)
+
+    print()
+    print(f"Scenario {scenario.id} COMPLETED in {elapsed:.1f}s")
+    print(f"  Points scanned: {len(f_EDE_values)}")
+    print(f"  BBN-allowed: {sum(1 for r in results if r['BBN_ok'])}/{len(f_EDE_values)}")
+    print(f"  Max f_EDE_eff (BBN-allowed): {best_f_eff:.4f}")
+    print()
+
+    return True
+
+
+def run_horizon_memory_scenario(scenario: TestScenario) -> bool:
+    """Run the horizon-memory scenario (T06) with a 2D (lambda_hor, tau_hor) scan.
+
+    This function bypasses the standard xi/phi0 scan and instead scans
+    over a 2D grid of lambda_hor and tau_hor values, using pure GR (xi=0, phi0=0).
+
+    The memory field M(a) is integrated from a_start with initial condition M=0,
+    evolving according to:
+        dM/d(ln a) = (S_norm(a) - M) / tau_hor
+    where S_norm(a) = (H0/H(a))^2.
+
+    Returns:
+        True if completed successfully, False if skipped or failed
+    """
+    from scipy.integrate import solve_ivp
+
+    base_results_dir = os.path.join("results", "tests", scenario.id)
+    os.makedirs(base_results_dir, exist_ok=True)
+
+    status_path = os.path.join(base_results_dir, "status.json")
+
+    # Check if already completed (skip)
+    if os.path.exists(status_path):
+        with open(status_path, "r") as f:
+            status = json.load(f)
+        if status.get("completed"):
+            print(f"[SKIP] {scenario.id} already completed")
+            return False
+
+    print()
+    print("=" * 70)
+    print(f"Running horizon-memory scenario: {scenario.id}")
+    print(f"Description: {scenario.description}")
+    print("=" * 70)
+
+    start_time = time.time()
+
+    # 2D grid: 10x10 over lambda_hor and tau_hor
+    n_lambda = 10
+    n_tau = 10
+    lambda_values = np.linspace(0.0, 0.2, n_lambda)
+    tau_values = np.linspace(0.1, 3.0, n_tau)
+
+    # Integration range
+    a_start = 1e-6  # Very early (z ~ 10^6)
+    a_end = 1.0     # Today (z = 0)
+    ln_a_start = np.log(a_start)
+    ln_a_end = np.log(a_end)
+
+    results = []
+    best_delta_H0 = 0.0
+    best_params = None
+
+    print(f"  Scanning {n_lambda} x {n_tau} = {n_lambda * n_tau} grid points")
+    print(f"  lambda_hor: {lambda_values[0]:.3f} to {lambda_values[-1]:.3f}")
+    print(f"  tau_hor: {tau_values[0]:.3f} to {tau_values[-1]:.3f}")
+    print()
+
+    for lam in lambda_values:
+        for tau in tau_values:
+            # Create HRC2Parameters with pure GR (xi=0) and horizon-memory params
+            params = HRC2Parameters(
+                xi=0.0,
+                phi_0=0.0,
+                coupling_family=CouplingFamily.QUADRATIC,
+                potential_type=PotentialType.QUADRATIC,
+                lambda_hor=lam,
+                tau_hor=tau,
+            )
+
+            # Create BackgroundCosmology instance
+            cosmo = BackgroundCosmology(params)
+
+            # Define ODE for M(ln_a)
+            # dM/d(ln a) = (S_norm - M) / tau_hor
+            def memory_ode(ln_a, y):
+                M = y[0]
+                a = np.exp(ln_a)
+                H = cosmo.H_of_a_gr(a)
+                S_n = cosmo.S_norm(H)
+                dM_dlna = (S_n - M) / tau
+                return [dM_dlna]
+
+            # Initial condition: M(a_start) = 0
+            M0 = [0.0]
+
+            # Integrate from ln(a_start) to ln(a_end)
+            sol = solve_ivp(
+                memory_ode,
+                (ln_a_start, ln_a_end),
+                M0,
+                method='RK45',
+                dense_output=True,
+                rtol=1e-8,
+                atol=1e-10,
+            )
+
+            if not sol.success:
+                print(f"  Warning: Integration failed for lambda={lam:.3f}, tau={tau:.3f}")
+                continue
+
+            # Evaluate at z=0 (ln_a = 0)
+            M_today = sol.sol(0.0)[0]
+
+            # Evaluate at z=1100 (a ~ 1/1101, ln_a ~ -7.0)
+            ln_a_rec = np.log(1.0 / 1101.0)
+            M_rec = sol.sol(ln_a_rec)[0]
+
+            # Compute rho_hor at both epochs
+            rho_hor_0 = cosmo.rho_horizon_memory(M_today)
+            rho_hor_rec = cosmo.rho_horizon_memory(M_rec)
+
+            # Total densities
+            rho_tot_0 = cosmo.total_density(1.0)
+            rho_tot_rec = cosmo.total_density(1.0 / 1101.0)
+
+            frac_0 = rho_hor_0 / rho_tot_0 if rho_tot_0 > 0 else 0.0
+            frac_rec = rho_hor_rec / rho_tot_rec if rho_tot_rec > 0 else 0.0
+
+            # Compute delta_H0 proxy
+            delta_H0_frac = cosmo.delta_H0_proxy(M_today)
+
+            result_entry = {
+                "lambda_hor": float(lam),
+                "tau_hor": float(tau),
+                "M_today": float(M_today),
+                "M_rec": float(M_rec),
+                "rho_hor_z0": float(rho_hor_0),
+                "rho_tot_z0": float(rho_tot_0),
+                "rho_hor_frac_z0": float(frac_0),
+                "rho_hor_z1100": float(rho_hor_rec),
+                "rho_tot_z1100": float(rho_tot_rec),
+                "rho_hor_frac_z1100": float(frac_rec),
+                "delta_H0_frac": float(delta_H0_frac),
+            }
+            results.append(result_entry)
+
+            # Track best result
+            if delta_H0_frac > best_delta_H0:
+                best_delta_H0 = delta_H0_frac
+                best_params = (lam, tau)
+
+    elapsed = time.time() - start_time
+
+    # Print summary
+    print()
+    print(f"  Sample results:")
+    for r in results[:5]:
+        print(f"    lambda={r['lambda_hor']:.3f}, tau={r['tau_hor']:.3f}: "
+              f"M_today={r['M_today']:.4f}, delta_H0={r['delta_H0_frac']:.4f}")
+    if len(results) > 5:
+        print(f"    ... and {len(results) - 5} more")
+
+    # Write status.json
+    status = {
+        "id": scenario.id,
+        "description": scenario.description,
+        "coupling_family": scenario.coupling_family.value,
+        "potential_type": scenario.potential_type.value,
+        "n_lambda": n_lambda,
+        "n_tau": n_tau,
+        "lambda_range": [float(lambda_values[0]), float(lambda_values[-1])],
+        "tau_range": [float(tau_values[0]), float(tau_values[-1])],
+        "completed": True,
+        "timestamp": datetime.now().isoformat(),
+        "elapsed_seconds": elapsed,
+        "n_points": len(results),
+        "best_delta_H0_frac": float(best_delta_H0),
+        "best_lambda_hor": float(best_params[0]) if best_params else None,
+        "best_tau_hor": float(best_params[1]) if best_params else None,
+        "scan_results": results,
+    }
+
+    with open(status_path, "w") as f:
+        json.dump(status, f, indent=2)
+
+    print()
+    print(f"Scenario {scenario.id} COMPLETED in {elapsed:.1f}s")
+    print(f"  Points scanned: {len(results)}")
+    print(f"  Best delta_H0 (fractional): {best_delta_H0:.4f}")
+    if best_params:
+        print(f"  Best params: lambda_hor={best_params[0]:.3f}, tau_hor={best_params[1]:.3f}")
+    print()
+
+    return True
+
+
 def run_test_scenario(scenario: TestScenario, perf: PerformanceConfig) -> bool:
     """Run a single test scenario.
 
@@ -179,6 +488,10 @@ def run_test_scenario(scenario: TestScenario, perf: PerformanceConfig) -> bool:
     print(f"Running scenario: {scenario.id}")
     print(f"Description: {scenario.description}")
     print(f"Coupling: {scenario.coupling_family.value}")
+    if scenario.alpha_rec > 0:
+        print(f"Recycling: alpha_rec = {scenario.alpha_rec}")
+    if scenario.gamma_rec > 0:
+        print(f"Horizon potential: gamma_rec = {scenario.gamma_rec}")
     print(f"Grid: {scenario.nx} xi x {scenario.nphi} phi0 = {scenario.nx * scenario.nphi} points")
     print("=" * 70)
 
@@ -202,6 +515,8 @@ def run_test_scenario(scenario: TestScenario, perf: PerformanceConfig) -> bool:
         z_points=300,
         constraint_level="conservative",
         verbose=True,
+        alpha_rec=scenario.alpha_rec,
+        gamma_rec=scenario.gamma_rec,
     )
 
     elapsed = time.time() - start_time
@@ -223,6 +538,8 @@ def run_test_scenario(scenario: TestScenario, perf: PerformanceConfig) -> bool:
         "coupling_family": scenario.coupling_family.value,
         "potential_type": scenario.potential_type.value,
         "coupling_params": scenario.coupling_params,
+        "alpha_rec": scenario.alpha_rec,
+        "gamma_rec": scenario.gamma_rec,
         "completed": True,
         "timestamp": datetime.now().isoformat(),
         "elapsed_seconds": elapsed,
@@ -324,7 +641,13 @@ def main():
         # Run single scenario
         try:
             scenario = get_scenario_by_id(args.scenario_id)
-            run_test_scenario(scenario, perf)
+            # Handle special scenarios
+            if scenario.id == "T05_EDE_fluid":
+                run_ede_fluid_scenario(scenario)
+            elif scenario.id == "T06_horizon_memory_nonlocal":
+                run_horizon_memory_scenario(scenario)
+            else:
+                run_test_scenario(scenario, perf)
         except ValueError as e:
             print(f"Error: {e}")
             print(f"Available: {list_scenario_ids()}")
@@ -338,7 +661,13 @@ def main():
         print("=" * 70)
 
         for scenario in TEST_SCENARIOS:
-            run_test_scenario(scenario, perf)
+            # Handle special scenarios
+            if scenario.id == "T05_EDE_fluid":
+                run_ede_fluid_scenario(scenario)
+            elif scenario.id == "T06_horizon_memory_nonlocal":
+                run_horizon_memory_scenario(scenario)
+            else:
+                run_test_scenario(scenario, perf)
 
     # Print final summary
     print_final_summary()
