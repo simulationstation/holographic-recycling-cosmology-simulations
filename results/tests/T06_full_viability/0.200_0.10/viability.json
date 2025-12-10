@@ -1,0 +1,25 @@
+{
+  "model_id": "0.200_0.10",
+  "lambda_hor": 0.2,
+  "tau_hor": 0.1,
+  "tests": {
+    "SN_BAO": {
+      "passes": true,
+      "max_H_deviation": 0.024821705847347664,
+      "max_D_L_deviation": 0.019436171406929548
+    },
+    "growth": {
+      "passes": "true",
+      "max_f_sigma8_deviation": 0.0458962973549788
+    },
+    "CMB_distance": {
+      "passes": "marginal",
+      "deviation_percent": 0.7756076752339247
+    },
+    "perturbation_stability": {
+      "status": "ok",
+      "notes": "All k modes stable"
+    }
+  },
+  "overall_viability": "marginal"
+}

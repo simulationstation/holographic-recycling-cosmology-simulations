@@ -1,0 +1,27 @@
+{
+  "analysis_type": "T06_full_viability",
+  "n_models": 3,
+  "n_viable": 0,
+  "n_marginal": 3,
+  "n_ruled_out": 0,
+  "models": [
+    {
+      "model_id": "0.200_0.10",
+      "lambda_hor": 0.2,
+      "tau_hor": 0.1,
+      "overall_viability": "marginal"
+    },
+    {
+      "model_id": "0.178_0.10",
+      "lambda_hor": 0.17777777777777778,
+      "tau_hor": 0.1,
+      "overall_viability": "marginal"
+    },
+    {
+      "model_id": "0.156_0.10",
+      "lambda_hor": 0.15555555555555556,
+      "tau_hor": 0.1,
+      "overall_viability": "marginal"
+    }
+  ]
+}

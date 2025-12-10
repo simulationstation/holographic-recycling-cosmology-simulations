@@ -1,0 +1,17 @@
+{
+  "model_id": "0.156_0.10",
+  "lambda_hor": 0.156,
+  "tau_hor": 0.1,
+  "Omega_de_0": 0.6999100000000003,
+  "Omega_Lambda_eff": 0.5591335501031813,
+  "c_s_squared": 1.0,
+  "w_0": -1.1802498716837093,
+  "w_z1": -1.8108759405298278,
+  "z_max": 10.0,
+  "n_points": 100,
+  "files": {
+    "ini": "results/class_export/0.156_0.10/class_horizon_memory_0.156_0.10.ini",
+    "w_table": "results/class_export/0.156_0.10/w_hor_0.156_0.10.dat",
+    "rho_table": "results/class_export/0.156_0.10/rho_de_0.156_0.10.dat"
+  }
+}

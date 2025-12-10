@@ -21,6 +21,13 @@ from .xi_tradeoff import (
     save_partial_results,
 )
 
+from .interface_class import (
+    HorizonMemoryClassExport,
+    HorizonMemoryClassInterface,
+    export_to_class_format,
+    prepare_class_export,
+)
+
 __all__ = [
     "XiTradeoffResultHRC2",
     "SinglePointResult",
@@ -33,4 +40,9 @@ __all__ = [
     "run_xi_tradeoff_serial",
     "rebuild_xi_tradeoff_result",
     "save_partial_results",
+    # CLASS interface
+    "HorizonMemoryClassExport",
+    "HorizonMemoryClassInterface",
+    "export_to_class_format",
+    "prepare_class_export",
 ]
