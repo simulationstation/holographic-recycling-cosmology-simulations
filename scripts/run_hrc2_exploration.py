@@ -166,9 +166,9 @@ def run_full_parallel_scan() -> None:
 
     perf = PerformanceConfig(n_workers=10)
 
-    # 30x30 grid = 900 points per coupling family (for faster initial testing)
-    xi_values = np.logspace(-5, -2.5, 30)
-    phi0_values = np.linspace(0.0, 0.3, 30)
+    # 10x10 grid = 100 points per coupling family (minimal test run)
+    xi_values = np.logspace(-5, -2.5, 10)
+    phi0_values = np.linspace(0.0, 0.3, 10)
 
     print(f"Parameter grid:")
     print(f"  xi: {len(xi_values)} points from {xi_values.min():.1e} to {xi_values.max():.1e}")
