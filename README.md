@@ -139,13 +139,69 @@ tests/                       # Unit tests
 docs/                        # Documentation
 ```
 
-## Key Predictions
+## Key Results: HMDE T06D Falsification Tests
+
+### Summary: Model Does NOT Resolve Hubble Tension
+
+After extensive testing of the Horizon-Memory Dark Energy (HMDE) T06D model, we find:
+
+| Test | Result | Implication |
+|------|--------|-------------|
+| Parameter Scan | **0/2250 pass** | No valid parameter space |
+| High-z Impact | **< 0.01%** | Negligible at recombination |
+| H₀ Best Fit | **67.43 ± 0.10** | No improvement over ΛCDM |
+| ΔAIC vs ΛCDM | **+4.3** | ΛCDM slightly preferred |
+
+### Test Results Detail
+
+**TEST 1: Direct MCMC (emcee)**
+- Sampled: H₀, Ω_m, δw, a_w, λ_hor
+- Result: H₀ = 67.56 ± 0.43 km/s/Mpc
+- HMDE parameters: δw = -0.09 ± 0.05, a_w = 0.31 ± 0.04
+
+**TEST 2: High-Redshift Sensitivity Scan**
+- 2250 parameter combinations tested
+- Constraints: θ_s < 0.1%, D_L < 2%, BAO < 1%
+- **Result: 0 points pass all constraints simultaneously**
+- Maximum H(z=1089) deviation: 0.000%
+
+**TEST 3: Aggressive H₀ Falsification**
+- Target: Push H₀ to 73 km/s/Mpc while matching CMB θ_s
+- CPL fit: w₀ = -0.986, wₐ = 0.075 (nearly ΛCDM)
+- **Result: Cannot achieve high H₀ within observational bounds**
+
+### Physical Interpretation
+
+The HMDE model modifies the dark energy equation of state as:
+```
+w_eff(a) = w_base + Δw / (1 + (a/a_w)^m)
+```
+
+This late-time modification **cannot** significantly alter early-universe physics (z > 1000) while satisfying:
+- CMB sound horizon (θ_s from Planck)
+- BAO standard ruler (r_drag)
+- Type Ia SNe distances (Pantheon+)
+
+The Hubble tension requires correlated modifications at **both** early AND late times, which this model architecture cannot provide.
+
+### Falsification Status
+
+| Criterion | Status |
+|-----------|--------|
+| Standard sirens → H₀ ≈ 67 | Pending data |
+| w = -1 ± 0.02 confirmed | **Supported by HMDE fit** |
+| Tension resolved by systematics | Possible |
+| HMDE improves over ΛCDM | **NO** |
+
+---
+
+## Original Key Predictions
 
 | Observable | ΛCDM | HRC | Status |
 |------------|------|-----|--------|
-| H₀ tension | 5σ unexplained | ΔH₀ ≈ 6 km/s/Mpc | **OBSERVED** |
-| w₀ | -1.00 | -0.88 | DESI hints |
-| wₐ | 0 | -0.5 | DESI hints |
+| H₀ tension | 5σ unexplained | ΔH₀ ≈ 6 km/s/Mpc | **NOT ACHIEVED** |
+| w₀ | -1.00 | -0.88 | HMDE: -0.99 |
+| wₐ | 0 | -0.5 | HMDE: +0.08 |
 | GW echoes | None | t ≈ 27 ms (30 M☉) | Testable |
 | DM mass | Unknown | M_Planck | Theory |
 
@@ -172,15 +228,25 @@ pytest tests/ -v
 
 ## Falsification Criteria
 
+### HMDE T06D Model: EFFECTIVELY FALSIFIED
+
+The horizon-memory dark energy approach has been tested and found **unable to resolve the Hubble tension**:
+
+- **0 of 2250 parameter combinations** pass combined CMB + BAO + SNe constraints
+- Best-fit H₀ = 67.43 km/s/Mpc (identical to ΛCDM)
+- ΔAIC = +4.3 (model complexity not justified by improved fit)
+
+### Original HRC Criteria
+
 HRC would be **falsified** if:
 - Standard sirens converge to H₀ ≈ 67 km/s/Mpc
-- w = -1 ± 0.02 confirmed with high precision
+- w = -1 ± 0.02 confirmed with high precision ← **HMDE gives w₀ = -0.99**
 - Hubble tension resolved by identified systematics
 - GW echo searches definitively negative at <1% amplitude
 
 HRC would be **strongly supported** if:
 - Standard sirens match local H₀ (~73)
-- w(z) trajectory matches HRC predictions
+- w(z) trajectory matches HRC predictions ← **NOT ACHIEVED**
 - GW echoes detected at predicted delays
 
 ## Citation
@@ -218,3 +284,22 @@ MIT License - see LICENSE file.
 ---
 
 *Version 2.0 - December 2025*
+
+---
+
+## Appendix: HMDE T06D Test Scripts
+
+The falsification tests can be reproduced using:
+
+```bash
+# TEST 1: Direct MCMC sampling
+python scripts/run_hmde_background_mcmc.py --n-walkers 24 --n-steps 1000
+
+# TEST 2: High-redshift sensitivity scan
+python scripts/run_hmde_highz_sensitivity_scan.py
+
+# TEST 3: Aggressive H0 falsification
+python scripts/run_hmde_aggressive_falsification.py
+```
+
+Results are saved in `results/test1_background_mcmc/`, `results/test2_highz_sensitivity/`, and `results/test3_aggressive_falsification/`.
