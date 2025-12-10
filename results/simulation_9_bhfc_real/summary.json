@@ -1,0 +1,60 @@
+{
+  "simulation": "T09_BHFC_REAL - Early Black-Hole Dominated Fertility Cosmology",
+  "date": "2025-12-10T10:55:19.038501",
+  "models_scanned": 78,
+  "models_successful": 78,
+  "models_passing": 48,
+  "pass_rate_percent": 61.53846153846154,
+  "max_Delta_H0_kmsMpc": 1.3122698506951025,
+  "verdict": "SMALL_SPLIT",
+  "interpretation": "Some PASS models produce 1 <= |Delta_H0| <= 3 km/s/Mpc (max: 1.31). Early BH-dominated phase can generate a small early-late H0 split, but not at the level of the full Hubble tension (~5 km/s/Mpc).",
+  "best_model": {
+    "params": {
+      "f_BH_init": 0.3,
+      "z_form": 100000.0,
+      "z_evap": null,
+      "A_eff": 0.5,
+      "f_evap": 0.0
+    },
+    "H0_Early": 68.7122698506951,
+    "H0_Late": 67.39999999999999,
+    "Delta_H0": -1.3122698506951025,
+    "delta_theta_s_percent": 0.16368091244137034
+  },
+  "parameter_trends": {
+    "by_f_BH_init": {
+      "0.0": {
+        "mean": 1.3122698506950883,
+        "max": 1.3122698506950883,
+        "count": 12
+      },
+      "0.1": {
+        "mean": 1.3122698506950883,
+        "max": 1.3122698506950883,
+        "count": 12
+      },
+      "0.3": {
+        "mean": 1.3122698506951,
+        "max": 1.3122698506951025,
+        "count": 12
+      },
+      "0.5": {
+        "mean": 1.3122698506951,
+        "max": 1.3122698506951025,
+        "count": 12
+      }
+    },
+    "by_z_form": {
+      "100000.0": {
+        "mean": 1.3122698506950943,
+        "max": 1.3122698506951025,
+        "count": 24
+      },
+      "1000000.0": {
+        "mean": 1.3122698506950943,
+        "max": 1.3122698506951025,
+        "count": 24
+      }
+    }
+  }
+}
