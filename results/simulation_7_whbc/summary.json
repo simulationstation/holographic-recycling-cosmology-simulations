@@ -1,0 +1,83 @@
+{
+  "simulation": "T07_WHBC - White-Hole Boundary Cosmology",
+  "date": "2025-12-10T10:00:48.724848",
+  "parameters_scanned": {
+    "epsilon_WH": [
+      0.0,
+      0.05,
+      0.1,
+      0.15
+    ],
+    "beta_WH": [
+      0.0,
+      0.02,
+      0.04,
+      0.06
+    ],
+    "gamma_WH": [
+      0.0,
+      0.5,
+      1.0
+    ],
+    "xi_WH": [
+      0.0,
+      0.05
+    ]
+  },
+  "total_points": 96,
+  "passing_points": 3,
+  "pass_fraction": 0.03125,
+  "best_model": {
+    "params": {
+      "epsilon_WH": 0.0,
+      "beta_WH": 0.02,
+      "gamma_WH": 1.0,
+      "xi_WH": 0.0,
+      "z_memory_threshold": 50.0,
+      "H0": 67.4,
+      "Omega_m": 0.315,
+      "Omega_b": 0.0493,
+      "Omega_r": 9.24e-05,
+      "Omega_Lambda": 0.6849076000000001,
+      "ns": 0.9649,
+      "As": 2.1e-09
+    },
+    "r_s_WHBC": 143.97540098404747,
+    "r_s_LCDM": 146.91367447351783,
+    "r_s_ratio": 0.98,
+    "theta_s_WHBC": 0.010384919381963901,
+    "theta_s_LCDM": 0.010596856512208062,
+    "theta_s_deviation_percent": 2.0000000000000027,
+    "chi2_theta_s": 74.9991681708573,
+    "chi2_bao": 5.796460125110764,
+    "chi2_sn": 95.36427519109168,
+    "chi2_growth": 0.0,
+    "chi2_total": 176.15990348705975,
+    "passes_constraints": false,
+    "constraint_details": {
+      "theta_s_pass": false,
+      "bao_pass": true,
+      "sn_pass": true,
+      "growth_pass": true
+    }
+  },
+  "min_chi2": 176.15990348705975,
+  "delta_theta_s_best": 2.0000000000000027,
+  "delta_r_s_best": 2.0000000000000018,
+  "max_H_ratio_z1000_passing": 1.0,
+  "can_alleviate_hubble_tension": false,
+  "hubble_tension_assessment": "WHBC modifications are too constrained to significantly help Hubble tension",
+  "recommended_next_steps": [
+    "Run full CMB power spectrum with CLASS/CAMB",
+    "Perform MCMC parameter estimation",
+    "Test perturbation growth predictions",
+    "Explore higher epsilon_WH with adjusted beta_WH compensation"
+  ],
+  "key_findings": [
+    "Pass rate: 3.1% of parameter points",
+    "Best chi^2: 176.16",
+    "Maximum H(z=1000) shift in passing models: 0.00%",
+    "WHBC primarily affects early-universe via epsilon_WH and r_s via beta_WH",
+    "Perturbation damping (gamma_WH) has minimal effect on background"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "models": [
+    {
+      "index": 1,
+      "params": {
+        "epsilon_WH": 0.0,
+        "beta_WH": 0.0,
+        "gamma_WH": 0.0,
+        "xi_WH": 0.0,
+        "z_memory_threshold": 50.0,
+        "H0": 67.4,
+        "Omega_m": 0.315,
+        "Omega_b": 0.0493,
+        "Omega_r": 9.24e-05,
+        "Omega_Lambda": 0.6849076000000001,
+        "ns": 0.9649,
+        "As": 2.1e-09
+      },
+      "r_s_ratio": 1.0,
+      "theta_s_ratio": 1.0,
+      "damping_k_pivot": 0.05,
+      "damping_gamma": 0.0
+    },
+    {
+      "index": 2,
+      "params": {
+        "epsilon_WH": 0.0,
+        "beta_WH": 0.0,
+        "gamma_WH": 1.0,
+        "xi_WH": 0.0,
+        "z_memory_threshold": 50.0,
+        "H0": 67.4,
+        "Omega_m": 0.315,
+        "Omega_b": 0.0493,
+        "Omega_r": 9.24e-05,
+        "Omega_Lambda": 0.6849076000000001,
+        "ns": 0.9649,
+        "As": 2.1e-09
+      },
+      "r_s_ratio": 1.0,
+      "theta_s_ratio": 1.0,
+      "damping_k_pivot": 0.05,
+      "damping_gamma": 1.0
+    },
+    {
+      "index": 3,
+      "params": {
+        "epsilon_WH": 0.0,
+        "beta_WH": 0.0,
+        "gamma_WH": 0.5,
+        "xi_WH": 0.0,
+        "z_memory_threshold": 50.0,
+        "H0": 67.4,
+        "Omega_m": 0.315,
+        "Omega_b": 0.0493,
+        "Omega_r": 9.24e-05,
+        "Omega_Lambda": 0.6849076000000001,
+        "ns": 0.9649,
+        "As": 2.1e-09
+      },
+      "r_s_ratio": 1.0,
+      "theta_s_ratio": 1.0,
+      "damping_k_pivot": 0.05,
+      "damping_gamma": 0.5
+    }
+  ]
+}
