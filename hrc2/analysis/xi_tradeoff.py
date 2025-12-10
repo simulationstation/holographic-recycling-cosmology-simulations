@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Tuple, List
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
+import time
 import numpy as np
 from numpy.typing import NDArray
 
@@ -138,6 +139,19 @@ def evaluate_model_point(
     Returns:
         SinglePointResult with evaluation results
     """
+    # Timeout enforcement
+    start_time = time.time()
+    timeout = perf.max_time_per_model
+
+    def _invalid_result():
+        return SinglePointResult(
+            xi=xi, phi0=phi0,
+            dynamically_stable=False,
+            bbn_allowed=False, ppn_allowed=False, stellar_allowed=False,
+            all_constraints_allowed=False,
+            delta_G_over_G=np.nan, delta_H0=np.nan
+        )
+
     try:
         # Create parameters for this point
         params = HRC2Parameters(
@@ -153,12 +167,21 @@ def evaluate_model_point(
         # Create model and solve
         model = create_model(params)
         cosmo = BackgroundCosmology(params, model)
-        solution = cosmo.solve(
-            z_max=z_max,
-            z_points=z_points,
-            rtol=perf.rtol,
-            atol=perf.atol,
-        )
+
+        try:
+            solution = cosmo.solve(
+                z_max=z_max,
+                z_points=z_points,
+                rtol=perf.rtol,
+                atol=perf.atol,
+            )
+        except (RuntimeError, Exception):
+            # Early exit from ODE solver (F invalid, G_eff out of range, etc.)
+            return _invalid_result()
+
+        # Check timeout after integration
+        if time.time() - start_time > timeout:
+            return _invalid_result()
 
         if not solution.success or not solution.geff_valid:
             return SinglePointResult(

@@ -274,10 +274,22 @@ class BackgroundCosmology:
         """
         phi, phi_prime = y
 
+        # Early exit: F(phi) below safety threshold
+        F = self.model.F(phi)
+        if F <= F_SAFETY_MARGIN * M_PL_SQUARED:
+            self._geff_valid = False
+            raise RuntimeError("F(phi) below safety threshold")
+
+        # Early exit: G_eff out of safe range
+        G_eff = compute_Geff_ratio(phi, self.model)
+        if not (0.05 < G_eff < GEFF_MAX_RATIO):
+            self._geff_valid = False
+            raise RuntimeError("G_eff out of safe range")
+
         # Check validity
         if not self.model.is_valid(phi, F_SAFETY_MARGIN):
             self._geff_valid = False
-            return np.array([0.0, 0.0])
+            raise RuntimeError("Model validity check failed")
 
         # Matter and radiation densities
         rho_m = self.Omega_m0 * (1 + z)**3

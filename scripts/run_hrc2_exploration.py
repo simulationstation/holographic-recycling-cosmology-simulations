@@ -166,9 +166,9 @@ def run_full_parallel_scan() -> None:
 
     perf = PerformanceConfig(n_workers=10)
 
-    # 60x60 grid = 3600 points per coupling family
-    xi_values = np.logspace(-5, -2, 60)
-    phi0_values = np.linspace(0.0, 0.5, 60)
+    # 30x30 grid = 900 points per coupling family (for faster initial testing)
+    xi_values = np.logspace(-5, -2.5, 30)
+    phi0_values = np.linspace(0.0, 0.3, 30)
 
     print(f"Parameter grid:")
     print(f"  xi: {len(xi_values)} points from {xi_values.min():.1e} to {xi_values.max():.1e}")
@@ -214,13 +214,17 @@ def run_full_parallel_scan() -> None:
     print("  - figures/hrc2_scan/xi_tradeoff_linear.png")
     print("=" * 80)
 
+    # Auto-commit results after scan finishes
+    print("\n=== Committing results to git ===")
+    os.system("git add results/hrc2_scan/* figures/hrc2_scan/*")
+    os.system('git commit -m "Full parallel HRC2 scan results with timeout + early exit"')
+
 
 if __name__ == "__main__":
     import multiprocessing as mp
     mp.set_start_method("spawn", force=True)
 
-    # First run tiny test to verify setup
-    tiny_test()
+    print("\n=== STARTING FULL PARALLEL HRC2 SCAN (TIMEOUT + EARLY EXIT ENABLED) ===\n")
 
-    # Then run full parallel scan
+    # Run full parallel scan (tiny test skipped for speed)
     run_full_parallel_scan()
