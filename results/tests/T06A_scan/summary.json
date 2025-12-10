@@ -1,0 +1,33 @@
+{
+  "refinement": "T06A",
+  "n_grid": 10,
+  "n_valid": 100,
+  "n_total": 100,
+  "tau0_range": [
+    0.01,
+    0.5
+  ],
+  "p_hor_range": [
+    -1.0,
+    3.0
+  ],
+  "fixed_params": {
+    "lambda_hor": 0.2
+  },
+  "best_model": {
+    "model_id": "T06A_9_8",
+    "tau0": 0.5,
+    "p_hor": 2.5555555555555554,
+    "omega_hor0_percent": 14.496659313050872,
+    "sn_deviation_percent": 0.9546330858675844,
+    "cmb_deviation_percent": 0.5248068729524213
+  },
+  "statistics": {
+    "omega_hor0_min": 9.993186331044953,
+    "omega_hor0_max": 19.82308531166418,
+    "sn_dev_min": 0.9303068778808932,
+    "sn_dev_max": 1.7857073994965278,
+    "cmb_dev_min": 0.5248068729524213,
+    "cmb_dev_max": 0.8371368639850996
+  }
+}

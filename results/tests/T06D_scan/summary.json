@@ -1,0 +1,35 @@
+{
+  "refinement": "T06D",
+  "n_grid": 10,
+  "n_valid": 100,
+  "n_total": 100,
+  "delta_w_range": [
+    -0.5,
+    0.1
+  ],
+  "a_w_range": [
+    0.1,
+    0.5
+  ],
+  "fixed_params": {
+    "m_eos": 2.0,
+    "lambda_hor": 0.2,
+    "tau_hor": 0.1
+  },
+  "best_model": {
+    "model_id": "T06D_7_4",
+    "delta_w": -0.033333333333333326,
+    "a_w": 0.2777777777777778,
+    "omega_hor0_percent": 5.067787532094827,
+    "sn_deviation_percent": 0.0,
+    "cmb_deviation_percent": 0.2144145165246636
+  },
+  "statistics": {
+    "omega_hor0_min": 0.45342657197502984,
+    "omega_hor0_max": 28745.989708583624,
+    "sn_dev_min": 0.0,
+    "sn_dev_max": 0.0,
+    "cmb_dev_min": 0.01836657951110876,
+    "cmb_dev_max": Infinity
+  }
+}
