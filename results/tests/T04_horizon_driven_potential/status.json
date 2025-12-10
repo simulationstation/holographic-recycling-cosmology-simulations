@@ -1,0 +1,20 @@
+{
+  "id": "T04_horizon_driven_potential",
+  "description": "Horizon-driven effective potential: V_eff = V0 + gamma_rec * H^4 * phi^2 / 2",
+  "coupling_family": "quadratic",
+  "potential_type": "quadratic",
+  "coupling_params": {},
+  "alpha_rec": 0.0,
+  "gamma_rec": 0.001,
+  "completed": true,
+  "timestamp": "2025-12-09T22:31:26.056673",
+  "elapsed_seconds": 1.1731066703796387,
+  "n_points": 25,
+  "n_stable": 5,
+  "n_allowed": 5,
+  "stable_fraction": 0.2,
+  "allowed_fraction": 0.2,
+  "max_abs_deltaG": 0.0,
+  "max_abs_deltaG_allowed": 0.0,
+  "max_abs_deltaH0_km_s_Mpc": 0.0
+}

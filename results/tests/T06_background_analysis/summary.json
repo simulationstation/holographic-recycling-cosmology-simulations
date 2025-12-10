@@ -1,0 +1,51 @@
+{
+  "analysis_type": "T06_horizon_memory_viability",
+  "n_models_analyzed": 3,
+  "models": [
+    {
+      "lambda_hor": 0.2,
+      "tau_hor": 0.1,
+      "Omega_hor0": 0.1804826280714,
+      "Omega_L0_eff": 0.5194273719285999,
+      "delta_H0_proxy": 0.08650017398590415,
+      "max_H_deviation_z01": 0.024821705898865898,
+      "max_D_L_deviation": 0.0195210010554292,
+      "max_D_A_deviation": 0.0195210010554292,
+      "w_hor_stability": "mild variation",
+      "within_5pct_tolerance": true,
+      "within_10pct_tolerance": true,
+      "plausibly_relieves_tension": true,
+      "worth_perturbation_analysis": true
+    },
+    {
+      "lambda_hor": 0.17777777777777778,
+      "tau_hor": 0.1,
+      "Omega_hor0": 0.16042900273013333,
+      "Omega_L0_eff": 0.5394809972698666,
+      "delta_H0_proxy": 0.07723210253414448,
+      "max_H_deviation_z01": 0.02203262709002274,
+      "max_D_L_deviation": 0.017288568803486948,
+      "max_D_A_deviation": 0.017288568803486726,
+      "w_hor_stability": "mild variation",
+      "within_5pct_tolerance": true,
+      "within_10pct_tolerance": true,
+      "plausibly_relieves_tension": true,
+      "worth_perturbation_analysis": true
+    },
+    {
+      "lambda_hor": 0.15555555555555556,
+      "tau_hor": 0.1,
+      "Omega_hor0": 0.14037537738886666,
+      "Omega_L0_eff": 0.5595346226111333,
+      "delta_H0_proxy": 0.06788359730303317,
+      "max_H_deviation_z01": 0.019251479905838864,
+      "max_D_L_deviation": 0.015072462214725135,
+      "max_D_A_deviation": 0.015072462214725135,
+      "w_hor_stability": "mild variation",
+      "within_5pct_tolerance": true,
+      "within_10pct_tolerance": true,
+      "plausibly_relieves_tension": true,
+      "worth_perturbation_analysis": true
+    }
+  ]
+}

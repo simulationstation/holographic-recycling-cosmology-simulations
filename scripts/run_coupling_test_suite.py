@@ -379,6 +379,9 @@ def run_horizon_memory_scenario(scenario: TestScenario) -> bool:
             # Evaluate at z=0 (ln_a = 0)
             M_today = sol.sol(0.0)[0]
 
+            # Set up self-consistent Lambda (replaces part of Lambda with horizon-memory)
+            cosmo.set_M_today(M_today)
+
             # Evaluate at z=1100 (a ~ 1/1101, ln_a ~ -7.0)
             ln_a_rec = np.log(1.0 / 1101.0)
             M_rec = sol.sol(ln_a_rec)[0]
@@ -394,8 +397,16 @@ def run_horizon_memory_scenario(scenario: TestScenario) -> bool:
             frac_0 = rho_hor_0 / rho_tot_0 if rho_tot_0 > 0 else 0.0
             frac_rec = rho_hor_rec / rho_tot_rec if rho_tot_rec > 0 else 0.0
 
-            # Compute delta_H0 proxy
-            delta_H0_frac = cosmo.delta_H0_proxy(M_today)
+            # Compute delta_H0 using new self-consistent method
+            delta_H0_result = cosmo.compute_delta_H0(
+                M_interp=lambda ln_a: sol.sol(ln_a),
+                z_calibration=0.5,
+            )
+            delta_H0_frac = delta_H0_result["delta_H0_frac"]
+            delta_H0_kmsMpc = delta_H0_result["delta_H0_kmsMpc"]
+
+            # Also compute the old proxy for comparison
+            delta_H0_proxy = cosmo.delta_H0_proxy(M_today)
 
             result_entry = {
                 "lambda_hor": float(lam),
@@ -409,6 +420,11 @@ def run_horizon_memory_scenario(scenario: TestScenario) -> bool:
                 "rho_tot_z1100": float(rho_tot_rec),
                 "rho_hor_frac_z1100": float(frac_rec),
                 "delta_H0_frac": float(delta_H0_frac),
+                "delta_H0_kmsMpc": float(delta_H0_kmsMpc),
+                "delta_H0_proxy": float(delta_H0_proxy),
+                "Omega_hor0": float(cosmo.Omega_hor0),
+                "Omega_L0_eff": float(cosmo.Omega_L0_eff),
+                "Omega_L0_base": float(cosmo.Omega_L0_base),
             }
             results.append(result_entry)
 
@@ -424,9 +440,18 @@ def run_horizon_memory_scenario(scenario: TestScenario) -> bool:
     print(f"  Sample results:")
     for r in results[:5]:
         print(f"    lambda={r['lambda_hor']:.3f}, tau={r['tau_hor']:.3f}: "
-              f"M_today={r['M_today']:.4f}, delta_H0={r['delta_H0_frac']:.4f}")
+              f"M_today={r['M_today']:.4f}, delta_H0={r['delta_H0_frac']*100:.2f}% ({r['delta_H0_kmsMpc']:.2f} km/s/Mpc)")
     if len(results) > 5:
         print(f"    ... and {len(results) - 5} more")
+
+    # Find the best result entry for km/s/Mpc
+    best_result = None
+    for r in results:
+        if best_params and r["lambda_hor"] == best_params[0] and r["tau_hor"] == best_params[1]:
+            best_result = r
+            break
+
+    best_delta_H0_kmsMpc = best_result["delta_H0_kmsMpc"] if best_result else 0.0
 
     # Write status.json
     status = {
@@ -443,6 +468,7 @@ def run_horizon_memory_scenario(scenario: TestScenario) -> bool:
         "elapsed_seconds": elapsed,
         "n_points": len(results),
         "best_delta_H0_frac": float(best_delta_H0),
+        "best_delta_H0_kmsMpc": float(best_delta_H0_kmsMpc),
         "best_lambda_hor": float(best_params[0]) if best_params else None,
         "best_tau_hor": float(best_params[1]) if best_params else None,
         "scan_results": results,
@@ -454,7 +480,7 @@ def run_horizon_memory_scenario(scenario: TestScenario) -> bool:
     print()
     print(f"Scenario {scenario.id} COMPLETED in {elapsed:.1f}s")
     print(f"  Points scanned: {len(results)}")
-    print(f"  Best delta_H0 (fractional): {best_delta_H0:.4f}")
+    print(f"  Best delta_H0: {best_delta_H0*100:.2f}% ({best_delta_H0_kmsMpc:.2f} km/s/Mpc)")
     if best_params:
         print(f"  Best params: lambda_hor={best_params[0]:.3f}, tau_hor={best_params[1]:.3f}")
     print()

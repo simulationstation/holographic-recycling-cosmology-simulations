@@ -1,0 +1,19 @@
+{
+  "id": "T03_thermo_horizon_recycling",
+  "description": "Thermal horizon recycling: H^2 -> H^2/(1-alpha_rec) with quadratic coupling",
+  "coupling_family": "quadratic",
+  "potential_type": "quadratic",
+  "coupling_params": {},
+  "alpha_rec": 0.05,
+  "completed": true,
+  "timestamp": "2025-12-09T22:18:35.283498",
+  "elapsed_seconds": 225.79461121559143,
+  "n_points": 25,
+  "n_stable": 5,
+  "n_allowed": 5,
+  "stable_fraction": 0.2,
+  "allowed_fraction": 0.2,
+  "max_abs_deltaG": 0.0,
+  "max_abs_deltaG_allowed": 0.0,
+  "max_abs_deltaH0_km_s_Mpc": 0.0
+}

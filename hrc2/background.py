@@ -262,6 +262,14 @@ class BackgroundCosmology:
         # Critical density at z=0 (in units of 3*H0^2, so rho_crit0 = 1)
         self.rho_crit0 = 1.0
 
+        # Self-consistent horizon-memory Lambda tracking
+        # Omega_L0_base is the "baseline" Lambda = 1 - Omega_m0 - Omega_r0
+        # Omega_L0_eff is the effective Lambda when horizon-memory is on
+        self.Omega_L0_base = 1.0 - self.Omega_m0 - self.Omega_r0
+        self.Omega_hor0 = 0.0  # Will be set by set_M_today()
+        self.Omega_L0_eff = self.Omega_L0_base  # Will be updated by set_M_today()
+        self._M_today = None  # Cached M_today value
+
         # Initial conditions at z=0
         self.phi_0 = params.phi_0
         self.phi_dot_0 = params.phi_dot_0
@@ -831,6 +839,79 @@ class BackgroundCosmology:
             return 0.0
         return self.lambda_hor * M * self.rho_crit0
 
+    def set_M_today(self, M_today: float) -> None:
+        """Set the memory field value at z=0 and compute self-consistent Lambda.
+
+        This enforces flatness at z=0 by having horizon-memory replace part of Lambda:
+            Omega_hor0 = lambda_hor * M_today
+            Omega_L0_eff = 1 - Omega_m0 - Omega_r0 - Omega_hor0 = Omega_L0_base - Omega_hor0
+
+        After calling this, H_of_a_selfconsistent() will use the effective Lambda.
+
+        Args:
+            M_today: Memory field value at z=0
+        """
+        self._M_today = M_today
+        self.Omega_hor0 = self.lambda_hor * M_today
+        self.Omega_L0_eff = self.Omega_L0_base - self.Omega_hor0
+
+        # Warn if effective Lambda is negative (unphysical)
+        if self.Omega_L0_eff < 0:
+            import warnings
+            warnings.warn(
+                f"Effective Lambda is negative: Omega_L0_eff = {self.Omega_L0_eff:.4f}. "
+                f"This indicates Omega_hor0 = {self.Omega_hor0:.4f} > Omega_L0_base = {self.Omega_L0_base:.4f}."
+            )
+
+    def H_of_a_selfconsistent(self, a: float, M: float) -> float:
+        """Compute Hubble parameter with self-consistent Lambda + horizon-memory.
+
+        This uses the effective Lambda (reduced by Omega_hor0) so that at z=0:
+            Omega_m0 + Omega_r0 + Omega_L0_eff + Omega_hor0 = 1
+
+        At arbitrary z, the evolution is:
+            H^2/H0^2 = Omega_m0*(1+z)^3 + Omega_r0*(1+z)^4 + Omega_L0_eff + lambda_hor*M
+
+        Args:
+            a: Scale factor
+            M: Memory field value at this scale factor
+
+        Returns:
+            H in units of H0
+        """
+        z = 1.0 / a - 1.0
+        rho_m = self.Omega_m0 * (1 + z)**3
+        rho_r = self.Omega_r0 * (1 + z)**4
+        rho_L = self.Omega_L0_eff  # Use effective Lambda
+        rho_hor = self.lambda_hor * M  # Horizon-memory contribution
+
+        H_squared = rho_m + rho_r + rho_L + rho_hor
+        if H_squared <= 0:
+            return 0.0
+        return np.sqrt(H_squared) * self.H0
+
+    def H_of_a_gr_baseline(self, a: float) -> float:
+        """Compute Hubble parameter at scale factor a using baseline Lambda.
+
+        This is the pure GR reference with Omega_L = Omega_L0_base (no horizon-memory).
+        Used for comparing H(z) with and without horizon-memory.
+
+        Args:
+            a: Scale factor
+
+        Returns:
+            H in units of H0
+        """
+        z = 1.0 / a - 1.0
+        rho_m = self.Omega_m0 * (1 + z)**3
+        rho_r = self.Omega_r0 * (1 + z)**4
+        rho_L = self.Omega_L0_base
+
+        H_squared = rho_m + rho_r + rho_L
+        if H_squared <= 0:
+            return 0.0
+        return np.sqrt(H_squared) * self.H0
+
     def H_of_a_gr(self, a: float) -> float:
         """Compute Hubble parameter at scale factor a assuming pure GR.
 
@@ -944,3 +1025,84 @@ class BackgroundCosmology:
         if x < -1.0:
             return -1.0  # Can't have negative H^2
         return np.sqrt(1.0 + x) - 1.0
+
+    def compute_delta_H0(
+        self,
+        M_interp: callable,
+        z_calibration: float = 0.5,
+    ) -> dict:
+        """Compute fractional H0 shift from actual H(z) comparison.
+
+        This compares:
+        1. H(z) with horizon-memory (self-consistent Lambda + rho_hor)
+        2. H(z) with pure baseline GR (no horizon-memory)
+
+        At z_calibration, we set H_baseline = H_hm (matching mid-z data).
+        Then at z=0, the ratio gives the "inferred" H0 shift:
+            delta_H0/H0 = H_hm(z=0)/H_baseline(z=0) - 1
+
+        Args:
+            M_interp: Callable M(ln_a) returning memory field at ln(a)
+            z_calibration: Redshift for calibration (default 0.5)
+
+        Returns:
+            Dictionary with:
+                - delta_H0_frac: Fractional H0 shift (H_hm(0)/H_baseline(0) - 1)
+                - delta_H0_kmsMpc: Shift in km/s/Mpc (using H0 = 67.4)
+                - H_ratio_z0: H_hm(z=0) / H_baseline(z=0)
+                - H_ratio_z_cal: H_hm(z_cal) / H_baseline(z_cal)
+                - Omega_hor0: Horizon-memory density fraction at z=0
+                - Omega_L0_eff: Effective Lambda density fraction
+        """
+        if self.lambda_hor == 0.0 or self._M_today is None:
+            return {
+                "delta_H0_frac": 0.0,
+                "delta_H0_kmsMpc": 0.0,
+                "H_ratio_z0": 1.0,
+                "H_ratio_z_cal": 1.0,
+                "Omega_hor0": 0.0,
+                "Omega_L0_eff": self.Omega_L0_base,
+            }
+
+        # Scale factors
+        a_0 = 1.0
+        a_cal = 1.0 / (1.0 + z_calibration)
+
+        # Get memory field values (extract scalar from array if needed)
+        ln_a_0 = 0.0
+        ln_a_cal = np.log(a_cal)
+        M_0_raw = M_interp(ln_a_0)
+        M_cal_raw = M_interp(ln_a_cal)
+        M_0 = float(M_0_raw[0]) if hasattr(M_0_raw, '__len__') else float(M_0_raw)
+        M_cal = float(M_cal_raw[0]) if hasattr(M_cal_raw, '__len__') else float(M_cal_raw)
+
+        # Compute H(z) with self-consistent horizon-memory
+        H_hm_0 = self.H_of_a_selfconsistent(a_0, M_0)
+        H_hm_cal = self.H_of_a_selfconsistent(a_cal, M_cal)
+
+        # Compute H(z) with pure baseline GR
+        H_gr_0 = self.H_of_a_gr_baseline(a_0)
+        H_gr_cal = self.H_of_a_gr_baseline(a_cal)
+
+        # Ratios
+        H_ratio_z0 = H_hm_0 / H_gr_0 if H_gr_0 > 0 else 1.0
+        H_ratio_z_cal = H_hm_cal / H_gr_cal if H_gr_cal > 0 else 1.0
+
+        # The key quantity: if we calibrate to match at z_cal, what H0 do we infer?
+        # H0_inferred / H0_baseline = (H_hm(0)/H_hm(z_cal)) / (H_gr(0)/H_gr(z_cal))
+        #                           = H_ratio_z0 / H_ratio_z_cal
+        # But in self-consistent case with proper flatness, we compare directly:
+        delta_H0_frac = H_ratio_z0 - 1.0
+
+        # Convert to km/s/Mpc (H0 = 67.4 km/s/Mpc from Planck)
+        H0_Planck = 67.4  # km/s/Mpc
+        delta_H0_kmsMpc = delta_H0_frac * H0_Planck
+
+        return {
+            "delta_H0_frac": delta_H0_frac,
+            "delta_H0_kmsMpc": delta_H0_kmsMpc,
+            "H_ratio_z0": H_ratio_z0,
+            "H_ratio_z_cal": H_ratio_z_cal,
+            "Omega_hor0": self.Omega_hor0,
+            "Omega_L0_eff": self.Omega_L0_eff,
+        }

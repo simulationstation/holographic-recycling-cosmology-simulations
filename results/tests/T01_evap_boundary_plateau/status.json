@@ -1,0 +1,20 @@
+{
+  "id": "T01_evap_boundary_plateau",
+  "description": "Evaporated-boundary-inspired coupling f(phi) = 1 - exp(-(phi/mu)^2)",
+  "coupling_family": "plateau_evap",
+  "potential_type": "quadratic",
+  "coupling_params": {
+    "mu": 0.1
+  },
+  "completed": true,
+  "timestamp": "2025-12-09T21:51:58.532957",
+  "elapsed_seconds": 225.82261037826538,
+  "n_points": 25,
+  "n_stable": 5,
+  "n_allowed": 5,
+  "stable_fraction": 0.2,
+  "allowed_fraction": 0.2,
+  "max_abs_deltaG": 0.0,
+  "max_abs_deltaG_allowed": 0.0,
+  "max_abs_deltaH0_km_s_Mpc": 0.0
+}

@@ -1,0 +1,61 @@
+{
+  "id": "T05_EDE_fluid",
+  "description": "Phenomenological Early Dark Energy (EDE) fluid added to GR Friedmann. Scan over f_EDE at fixed z_c to see early-density fractions.",
+  "coupling_family": "quadratic",
+  "potential_type": "quadratic",
+  "z_c": 3000.0,
+  "sigma_ln_a": 0.5,
+  "completed": true,
+  "timestamp": "2025-12-09T22:58:09.922005",
+  "elapsed_seconds": 0.0001552104949951172,
+  "n_points": 5,
+  "n_bbn_ok": 5,
+  "max_f_EDE_eff": 0.0476190476169875,
+  "scan_results": [
+    {
+      "f_EDE_input": 0.0,
+      "f_EDE_eff": 0.0,
+      "rho_EDE_at_zc": 0.0,
+      "rho_tot_at_zc": 15407827562.079998,
+      "rho_EDE_at_BBN": 0.0,
+      "rho_rad_at_BBN": 8.999999999999996e+31,
+      "BBN_ok": true
+    },
+    {
+      "f_EDE_input": 0.0125,
+      "f_EDE_eff": 0.012345679011791792,
+      "rho_EDE_at_zc": 192597844.5172511,
+      "rho_tot_at_zc": 15600425406.59725,
+      "rho_EDE_at_BBN": 3.163966305730442e-240,
+      "rho_rad_at_BBN": 8.999999999999996e+31,
+      "BBN_ok": true
+    },
+    {
+      "f_EDE_input": 0.025,
+      "f_EDE_eff": 0.024390243901358105,
+      "rho_EDE_at_zc": 385195689.0345022,
+      "rho_tot_at_zc": 15793023251.1145,
+      "rho_EDE_at_BBN": 6.327932611460884e-240,
+      "rho_rad_at_BBN": 8.999999999999996e+31,
+      "BBN_ok": true
+    },
+    {
+      "f_EDE_input": 0.037500000000000006,
+      "f_EDE_eff": 0.03614457831167047,
+      "rho_EDE_at_zc": 577793533.5517534,
+      "rho_tot_at_zc": 15985621095.631752,
+      "rho_EDE_at_BBN": 9.491898917191327e-240,
+      "rho_rad_at_BBN": 8.999999999999996e+31,
+      "BBN_ok": true
+    },
+    {
+      "f_EDE_input": 0.05,
+      "f_EDE_eff": 0.0476190476169875,
+      "rho_EDE_at_zc": 770391378.0690044,
+      "rho_tot_at_zc": 16178218940.149002,
+      "rho_EDE_at_BBN": 1.2655865222921769e-239,
+      "rho_rad_at_BBN": 8.999999999999996e+31,
+      "BBN_ok": true
+    }
+  ]
+}
