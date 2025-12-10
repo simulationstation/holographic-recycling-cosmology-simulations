@@ -13,6 +13,13 @@ from .summary import (
     PotentialSummary,
     POTENTIAL_DESCRIPTIONS,
 )
+from .xi_tradeoff import (
+    scan_xi_tradeoff,
+    find_critical_xi,
+    print_xi_tradeoff_summary,
+    compare_potentials_xi_tradeoff,
+    XiTradeoffResult,
+)
 
 __all__ = [
     "scan_parameter_space",
@@ -25,4 +32,10 @@ __all__ = [
     "quick_potential_check",
     "PotentialSummary",
     "POTENTIAL_DESCRIPTIONS",
+    # Xi tradeoff analysis
+    "scan_xi_tradeoff",
+    "find_critical_xi",
+    "print_xi_tradeoff_summary",
+    "compare_potentials_xi_tradeoff",
+    "XiTradeoffResult",
 ]

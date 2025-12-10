@@ -21,6 +21,14 @@ from .potential_comparison import (
     print_potential_comparison_report,
     DEFAULT_POTENTIALS,
 )
+from .xi_tradeoff import (
+    plot_max_delta_G_vs_xi,
+    plot_stability_map,
+    plot_delta_G_vs_phi0,
+    plot_stable_fraction_vs_xi,
+    create_xi_tradeoff_summary_figure,
+    plot_potential_comparison,
+)
 
 __all__ = [
     "plot_phase_diagram",
@@ -45,4 +53,11 @@ __all__ = [
     "summarize_potential_results",
     "print_potential_comparison_report",
     "DEFAULT_POTENTIALS",
+    # Xi tradeoff plots
+    "plot_max_delta_G_vs_xi",
+    "plot_stability_map",
+    "plot_delta_G_vs_phi0",
+    "plot_stable_fraction_vs_xi",
+    "create_xi_tradeoff_summary_figure",
+    "plot_potential_comparison",
 ]
