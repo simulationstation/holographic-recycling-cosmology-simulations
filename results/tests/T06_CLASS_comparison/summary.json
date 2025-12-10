@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-12-10T01:17:02.469883",
+  "boltzmann_code": "CAMB",
+  "camb_version": "1.6.5",
+  "models": {
+    "lcdm": {
+      "description": "Planck 2018 \u039bCDM baseline",
+      "H0": 67.4,
+      "ombh2": 0.02237,
+      "omch2": 0.12,
+      "tau": 0.054,
+      "ns": 0.9649,
+      "As": 2.1e-09
+    },
+    "t06d": {
+      "description": "Best T06D horizon-memory model",
+      "model_id": "T06D_7_4",
+      "delta_w": -0.033333333333333326,
+      "a_w": 0.2777777777777778,
+      "m_eos": 2.0,
+      "lambda_hor": 0.2,
+      "tau_hor": 0.1,
+      "w_0": -1.0023877745940784,
+      "w_a": -0.004433461137429085,
+      "Omega_hor0": 0.05231486684937225,
+      "Omega_L_eff": 0.6325951331506278
+    }
+  },
+  "cmb_derived": {
+    "lcdm": {
+      "theta_star_x100": 1.0412977182682859,
+      "rs_drag_Mpc": 147.101225882066,
+      "z_star": 1089.9379119769299
+    },
+    "t06d": {
+      "theta_star_x100": 1.0409807865743472,
+      "rs_drag_Mpc": 147.101372212608,
+      "z_star": 1089.937174088552
+    },
+    "shifts_percent": {
+      "theta_star": -0.030436222837948446,
+      "rs_drag": 9.947608603511071e-05,
+      "z_star": -6.770003775358191e-05
+    }
+  },
+  "power_spectrum_analysis": {
+    "ell_range": [
+      30,
+      2000
+    ],
+    "rms_deviation_percent": {
+      "TT": 0.10569254456567008,
+      "EE": 0.22184129529090665,
+      "TE": 22.200227435319196
+    },
+    "chi2_cosmic_variance": {
+      "chi2_TT": 2.9518051260753255,
+      "chi2_EE": 11.727572820647719,
+      "chi2_TE": 115053.33434439913,
+      "chi2_total": 115068.01372234586,
+      "n_ell": 1971,
+      "chi2_per_ell_TT": 0.001497618024391337,
+      "chi2_per_ell_total": 19.4601748219763
+    }
+  },
+  "verdict": {
+    "theta_s_shift_percent": -0.030436222837948446,
+    "planck_precision_percent": 0.03,
+    "passes_theta_s_constraint": true,
+    "chi2_per_ell": 19.4601748219763,
+    "model_distinguishable": true
+  }
+}
