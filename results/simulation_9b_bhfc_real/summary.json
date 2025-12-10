@@ -1,0 +1,29 @@
+{
+  "simulation": "T09B_BHFC_REAL - Habitability-Tied A_eff",
+  "date": "2025-12-10T11:20:31.951252",
+  "models_scanned": 9,
+  "models_successful": 9,
+  "models_passing": 6,
+  "pass_rate_percent": 66.66666666666667,
+  "A_HAB_STAR": 1.0,
+  "A_eff_fixed": 1.0,
+  "max_Delta_H0_kmsMpc": 1.3122698506951025,
+  "verdict": "SMALL_SPLIT",
+  "best_model": {
+    "params": {
+      "f_BH_init": 0.3,
+      "z_form": 100000.0,
+      "z_evap": null,
+      "f_evap": 0.0
+    },
+    "A_eff_fixed": 1.0,
+    "H0_Early": 68.7122698506951,
+    "H0_Late": 67.39999999999999,
+    "Delta_H0": -1.3122698506951025,
+    "delta_theta_s_percent": 0.16368091244137034
+  },
+  "comparison_to_sim9": {
+    "sim9_max_Delta_H0": 1.3122698506951025,
+    "sim9_verdict": "SMALL_SPLIT"
+  }
+}
