@@ -18,6 +18,47 @@ from scipy.interpolate import interp1d
 
 from .utils.config import HRCParameters, PotentialConfig
 from .utils.numerics import check_divergence, DivergenceResult
+from .potentials import Potential, QuadraticPotential
+
+
+class PotentialInterface:
+    """Unified interface for both old PotentialConfig and new Potential classes."""
+
+    def __init__(self, potential: Union[PotentialConfig, Potential, None], params: HRCParameters):
+        """Initialize with either PotentialConfig or Potential.
+
+        Args:
+            potential: Either PotentialConfig, Potential, or None
+            params: HRC parameters for defaults
+        """
+        if potential is None:
+            # Default to quadratic potential
+            self._potential = QuadraticPotential(V0=params.V0, m=params.m_phi)
+            self._is_new_interface = True
+        elif isinstance(potential, Potential):
+            self._potential = potential
+            self._is_new_interface = True
+        else:
+            # It's a PotentialConfig
+            self._potential = potential
+            self._is_new_interface = False
+
+    def V(self, phi: float) -> float:
+        """Evaluate potential V(phi)."""
+        return self._potential.V(phi)
+
+    def dV(self, phi: float) -> float:
+        """Evaluate potential derivative dV/dphi."""
+        if self._is_new_interface:
+            return self._potential.dV_dphi(phi)
+        return self._potential.dV(phi)
+
+    @property
+    def form(self) -> str:
+        """Return potential form for backward compatibility."""
+        if self._is_new_interface:
+            return self._potential.name
+        return self._potential.form
 
 
 @dataclass
@@ -78,7 +119,7 @@ class ScalarFieldSolver:
     def __init__(
         self,
         params: HRCParameters,
-        potential: Optional[PotentialConfig] = None,
+        potential: Optional[Union[PotentialConfig, Potential]] = None,
         H_func: Optional[Callable[[float], float]] = None,
         R_func: Optional[Callable[[float], float]] = None,
     ):
@@ -87,13 +128,14 @@ class ScalarFieldSolver:
         Args:
             params: HRC parameters
             potential: Potential configuration (default: quadratic)
+                      Can be either PotentialConfig (old) or Potential (new)
             H_func: Function H(z) returning Hubble parameter (in H0 units)
                    If None, uses ΛCDM approximation
             R_func: Function R(z) returning Ricci scalar (in H0² units)
                    If None, computes from H(z)
         """
         self.params = params
-        self.potential = potential or PotentialConfig(m=params.m_phi)
+        self.potential = PotentialInterface(potential, params)
 
         self._H_func = H_func or self._H_LCDM
         self._R_func = R_func
@@ -332,7 +374,7 @@ class ScalarFieldSolver:
 
 def compute_slow_roll_parameters(
     phi: float,
-    potential: PotentialConfig,
+    potential: Union[PotentialConfig, Potential, PotentialInterface],
     params: HRCParameters,
 ) -> Tuple[float, float]:
     """Compute slow-roll parameters ε and η.
@@ -342,14 +384,20 @@ def compute_slow_roll_parameters(
 
     Args:
         phi: Field value
-        potential: Potential configuration
+        potential: Potential configuration (PotentialConfig, Potential, or PotentialInterface)
         params: HRC parameters
 
     Returns:
         Tuple of (ε, η)
     """
-    V = potential.V(phi)
-    V_prime = potential.dV(phi)
+    # Wrap in interface if needed
+    if isinstance(potential, PotentialInterface):
+        pot_interface = potential
+    else:
+        pot_interface = PotentialInterface(potential, params)
+
+    V = pot_interface.V(phi)
+    V_prime = pot_interface.dV(phi)
 
     if abs(V) < 1e-30:
         return np.inf, np.inf
@@ -357,15 +405,9 @@ def compute_slow_roll_parameters(
     # In Planck units, M_Pl = 1
     epsilon = 0.5 * (V_prime / V) ** 2
 
-    # V'' for quadratic potential
-    if potential.form == "quadratic":
-        V_dprime = potential.m**2
-    elif potential.form == "quartic":
-        V_dprime = potential.m**2 + 3 * potential.lambda_4 * phi**2
-    else:
-        # Numerical derivative
-        dphi = 1e-5
-        V_dprime = (potential.dV(phi + dphi) - potential.dV(phi - dphi)) / (2 * dphi)
+    # V'' - use numerical derivative for generality
+    dphi = 1e-5
+    V_dprime = (pot_interface.dV(phi + dphi) - pot_interface.dV(phi - dphi)) / (2 * dphi)
 
     eta = V_dprime / V
 
@@ -374,7 +416,7 @@ def compute_slow_roll_parameters(
 
 def is_slow_roll_valid(
     phi: float,
-    potential: PotentialConfig,
+    potential: Union[PotentialConfig, Potential, PotentialInterface],
     params: HRCParameters,
     epsilon_max: float = 1.0,
     eta_max: float = 1.0,
@@ -383,7 +425,7 @@ def is_slow_roll_valid(
 
     Args:
         phi: Field value
-        potential: Potential configuration
+        potential: Potential configuration (PotentialConfig, Potential, or PotentialInterface)
         params: HRC parameters
         epsilon_max: Maximum allowed ε
         eta_max: Maximum allowed |η|

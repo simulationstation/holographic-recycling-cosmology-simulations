@@ -11,6 +11,16 @@ from .validity_regions import (
     plot_validity_boundary,
     create_summary_figure,
 )
+from .potential_comparison import (
+    plot_potential_shapes,
+    plot_validity_comparison,
+    plot_geff_evolution_comparison,
+    plot_phi_evolution_comparison,
+    create_potential_comparison_figure,
+    summarize_potential_results,
+    print_potential_comparison_report,
+    DEFAULT_POTENTIALS,
+)
 
 __all__ = [
     "plot_phase_diagram",
@@ -26,4 +36,13 @@ __all__ = [
     "plot_geff_at_z",
     "plot_validity_boundary",
     "create_summary_figure",
+    # Potential comparison plots
+    "plot_potential_shapes",
+    "plot_validity_comparison",
+    "plot_geff_evolution_comparison",
+    "plot_phi_evolution_comparison",
+    "create_potential_comparison_figure",
+    "summarize_potential_results",
+    "print_potential_comparison_report",
+    "DEFAULT_POTENTIALS",
 ]

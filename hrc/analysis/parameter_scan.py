@@ -6,7 +6,7 @@ classifying each point based on G_eff validity and Hubble tension resolution.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 import numpy as np
 from numpy.typing import NDArray
 
@@ -14,6 +14,16 @@ from ..utils.config import HRCParameters
 from ..utils.numerics import compute_critical_phi, check_geff_validity
 from ..background import BackgroundCosmology, BackgroundSolution
 from ..effective_gravity import compute_hubble_tension
+from ..potentials import (
+    Potential,
+    QuadraticPotential,
+    PlateauPotential,
+    SymmetronPotential,
+    ExponentialPotential,
+    PotentialParams,
+    get_potential,
+    POTENTIAL_REGISTRY,
+)
 
 
 class PointClassification(Enum):
@@ -100,6 +110,7 @@ def scan_parameter_space(
     verbose: bool = True,
     h: float = 0.7,
     geff_epsilon: float = 0.01,
+    potential: Optional[Union[Potential, PotentialParams, str]] = None,
 ) -> ParameterScanResult:
     """Scan the (xi, phi_0) parameter space systematically.
 
@@ -120,10 +131,18 @@ def scan_parameter_space(
         verbose: Print progress
         h: Hubble constant parameter (H0 = 100*h km/s/Mpc)
         geff_epsilon: Safety margin for G_eff divergence
+        potential: Scalar field potential. Can be:
+            - None: uses default QuadraticPotential
+            - str: potential type name (e.g., "quadratic", "plateau", "symmetron", "exponential")
+            - PotentialParams: parameters for get_potential()
+            - Potential: a concrete Potential instance
 
     Returns:
         ParameterScanResult with full classification results
     """
+    # Resolve potential
+    resolved_potential = _resolve_potential(potential)
+
     xi_grid = np.linspace(xi_range[0], xi_range[1], n_xi)
     phi_0_grid = np.linspace(phi_0_range[0], phi_0_range[1], n_phi_0)
 
@@ -159,6 +178,7 @@ def scan_parameter_space(
                 tension_threshold=tension_threshold,
                 h=h,
                 geff_epsilon=geff_epsilon,
+                potential=resolved_potential,
             )
 
             # Store results
@@ -217,6 +237,7 @@ def _scan_single_point(
     tension_threshold: float,
     h: float,
     geff_epsilon: float,
+    potential: Optional[Potential] = None,
 ) -> ScanPoint:
     """Scan a single parameter space point.
 
@@ -228,6 +249,7 @@ def _scan_single_point(
         tension_threshold: Delta_H0 threshold for tension resolution
         h: Hubble parameter
         geff_epsilon: Safety margin for G_eff divergence
+        potential: Scalar field potential (or None for default)
 
     Returns:
         ScanPoint with classification and details
@@ -260,7 +282,7 @@ def _scan_single_point(
                 phi_critical=phi_critical,
             )
 
-        cosmo = BackgroundCosmology(params, geff_epsilon=geff_epsilon)
+        cosmo = BackgroundCosmology(params, potential=potential, geff_epsilon=geff_epsilon)
         solution = cosmo.solve(z_max=z_max, z_points=z_points)
 
         if not solution.geff_valid:
@@ -327,6 +349,35 @@ def _scan_single_point(
         )
 
 
+def _resolve_potential(
+    potential: Optional[Union[Potential, PotentialParams, str]]
+) -> Optional[Potential]:
+    """Resolve potential argument to a Potential instance.
+
+    Args:
+        potential: Can be None, string name, PotentialParams, or Potential
+
+    Returns:
+        Resolved Potential instance or None for default
+    """
+    if potential is None:
+        return None
+    elif isinstance(potential, str):
+        # String name - create with default params
+        if potential not in POTENTIAL_REGISTRY:
+            raise ValueError(
+                f"Unknown potential type: {potential}. "
+                f"Available: {list(POTENTIAL_REGISTRY.keys())}"
+            )
+        return POTENTIAL_REGISTRY[potential]()
+    elif isinstance(potential, PotentialParams):
+        return get_potential(potential)
+    elif isinstance(potential, Potential):
+        return potential
+    else:
+        raise TypeError(f"Invalid potential type: {type(potential)}")
+
+
 def compute_validity_boundary(
     xi_range: Tuple[float, float] = (0.01, 0.1),
     n_xi: int = 50,
@@ -334,6 +385,7 @@ def compute_validity_boundary(
     h: float = 0.7,
     geff_epsilon: float = 0.01,
     verbose: bool = True,
+    potential: Optional[Union[Potential, PotentialParams, str]] = None,
 ) -> Tuple[NDArray[np.floating], NDArray[np.floating]]:
     """Compute the boundary curve between valid and invalid regions.
 
@@ -346,10 +398,13 @@ def compute_validity_boundary(
         h: Hubble parameter
         geff_epsilon: Safety margin for G_eff
         verbose: Print progress
+        potential: Scalar field potential (or None for default)
 
     Returns:
         Tuple of (xi_values, max_phi_0_values) for the boundary
     """
+    resolved_potential = _resolve_potential(potential)
+
     xi_values = np.linspace(xi_range[0], xi_range[1], n_xi)
     max_phi_0 = np.zeros(n_xi)
 
@@ -378,6 +433,7 @@ def compute_validity_boundary(
                 tension_threshold=0.0,
                 h=h,
                 geff_epsilon=geff_epsilon,
+                potential=resolved_potential,
             )
 
             if point.geff_valid:

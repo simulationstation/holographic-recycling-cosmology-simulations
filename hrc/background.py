@@ -13,7 +13,7 @@ where G_eff = G/(1 - 8πGξφ) and the scalar field contributes:
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Callable, Protocol
+from typing import Optional, Tuple, Callable, Protocol, Union
 import numpy as np
 from numpy.typing import NDArray
 from scipy.integrate import solve_ivp
@@ -31,6 +31,40 @@ from .utils.numerics import (
     compute_critical_phi,
     check_geff_validity,
 )
+from .potentials import Potential, QuadraticPotential
+
+
+class BackgroundPotentialInterface:
+    """Unified potential interface for BackgroundCosmology."""
+
+    def __init__(self, potential: Union[PotentialConfig, Potential, None], params: HRCParameters):
+        """Initialize with either PotentialConfig or Potential."""
+        if potential is None:
+            self._potential = QuadraticPotential(V0=params.V0, m=params.m_phi)
+            self._is_new_interface = True
+        elif isinstance(potential, Potential):
+            self._potential = potential
+            self._is_new_interface = True
+        else:
+            self._potential = potential
+            self._is_new_interface = False
+
+    def V(self, phi: float) -> float:
+        """Evaluate potential V(phi)."""
+        return self._potential.V(phi)
+
+    def dV(self, phi: float) -> float:
+        """Evaluate potential derivative dV/dphi."""
+        if self._is_new_interface:
+            return self._potential.dV_dphi(phi)
+        return self._potential.dV(phi)
+
+    @property
+    def name(self) -> str:
+        """Return potential name."""
+        if self._is_new_interface:
+            return self._potential.name
+        return self._potential.form
 
 
 class EffectiveGravityProtocol(Protocol):
@@ -133,7 +167,7 @@ class BackgroundCosmology:
     def __init__(
         self,
         params: HRCParameters,
-        potential: Optional[PotentialConfig] = None,
+        potential: Optional[Union[PotentialConfig, Potential]] = None,
         geff_epsilon: float = 0.01,
     ):
         """Initialize background solver.
@@ -141,10 +175,11 @@ class BackgroundCosmology:
         Args:
             params: HRC model parameters
             potential: Scalar field potential configuration
+                      Can be either PotentialConfig (old) or Potential (new)
             geff_epsilon: Safety margin for G_eff divergence (default 1%)
         """
         self.params = params
-        self.potential = potential or PotentialConfig(m=params.m_phi)
+        self.potential = BackgroundPotentialInterface(potential, params)
         self.geff_epsilon = geff_epsilon
 
         # Validate parameters

@@ -53,6 +53,20 @@ from .scalar_field import (
     is_slow_roll_valid,
 )
 
+# Potentials
+from .potentials import (
+    Potential,
+    QuadraticPotential,
+    PlateauPotential,
+    SymmetronPotential,
+    ExponentialPotential,
+    DoubleExponentialPotential,
+    InverseExponentialPotential,
+    PotentialParams,
+    get_potential,
+    POTENTIAL_REGISTRY,
+)
+
 # Effective gravity
 from .effective_gravity import (
     EffectiveGravity,
@@ -122,6 +136,11 @@ from .analysis import (
     scan_parameter_space,
     ParameterScanResult,
     PointClassification,
+    compare_potentials,
+    print_layman_summary,
+    generate_report,
+    quick_potential_check,
+    PotentialSummary,
 )
 
 
@@ -428,6 +447,17 @@ __all__ = [
     # Scalar field
     "ScalarFieldSolver",
     "ScalarFieldSolution",
+    # Potentials
+    "Potential",
+    "QuadraticPotential",
+    "PlateauPotential",
+    "SymmetronPotential",
+    "ExponentialPotential",
+    "DoubleExponentialPotential",
+    "InverseExponentialPotential",
+    "PotentialParams",
+    "get_potential",
+    "POTENTIAL_REGISTRY",
     # Effective gravity
     "EffectiveGravity",
     "GeffEvolution",
@@ -459,6 +489,11 @@ __all__ = [
     "scan_parameter_space",
     "ParameterScanResult",
     "PointClassification",
+    "compare_potentials",
+    "print_layman_summary",
+    "generate_report",
+    "quick_potential_check",
+    "PotentialSummary",
     # Convenience
     "quick_summary",
     "run_full_analysis",
