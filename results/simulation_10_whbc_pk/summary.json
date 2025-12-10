@@ -1,0 +1,37 @@
+{
+  "simulation": "T10_WHBC_PRIMORDIAL - WHBC-like Primordial P(k) on LCDM Background",
+  "date": "2025-12-10T11:50:28.816597",
+  "statistics": {
+    "n_total": 18,
+    "n_successful": 18,
+    "n_passing": 18,
+    "pass_rate": 100.0,
+    "TT_RMS_max": 0.009242368981890509,
+    "TT_RMS_mean": 0.004623820922474397,
+    "EE_RMS_max": 0.009242368981890509,
+    "EE_RMS_mean": 0.004623820922474397,
+    "sigma8_shift_max": 2.2971449247233267e-06,
+    "S8_shift_max": 2.2971449247233267e-06,
+    "delta_H0_approx_max": 0.000344571738708499,
+    "delta_H0_approx_mean": 0.00017214616046164663,
+    "H0_eff_max_abs": 2.842170943040401e-14,
+    "H0_eff_mean_abs": 2.842170943040401e-14,
+    "H0_eff_median_abs": 2.842170943040401e-14,
+    "n_tight_pass": 18,
+    "delta_H0_approx_max_tight": 0.000344571738708499
+  },
+  "interpretation": "WHBC-like primordial features consistent with CMB TT/EE spectra and sigma8/S8 produce only sub-km/s/Mpc shifts in the effective LCDM H0. Primordial P(k) modifications alone cannot meaningfully address the Hubble tension.",
+  "best_model": {
+    "params": {
+      "A_cut": -0.1,
+      "k_cut": 0.001,
+      "A_osc": 0.02,
+      "omega_WH": 10.0
+    },
+    "TT_RMS": 0.009240883407813906,
+    "EE_RMS": 0.009240883407813904,
+    "sigma8_ratio": 0.9999977028550753,
+    "delta_H0_approx": 0.000344571738708499
+  },
+  "verdict": "SMALL_EFFECT"
+}
