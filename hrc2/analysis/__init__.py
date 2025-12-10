@@ -9,16 +9,28 @@ general scalar-tensor models, including:
 
 from .xi_tradeoff import (
     XiTradeoffResultHRC2,
+    SinglePointResult,
     scan_xi_tradeoff_hrc2,
     find_critical_xi_hrc2,
     compare_coupling_families,
     print_xi_tradeoff_summary_hrc2,
+    evaluate_model_point,
+    run_xi_tradeoff_parallel,
+    run_xi_tradeoff_serial,
+    rebuild_xi_tradeoff_result,
+    save_partial_results,
 )
 
 __all__ = [
     "XiTradeoffResultHRC2",
+    "SinglePointResult",
     "scan_xi_tradeoff_hrc2",
     "find_critical_xi_hrc2",
     "compare_coupling_families",
     "print_xi_tradeoff_summary_hrc2",
+    "evaluate_model_point",
+    "run_xi_tradeoff_parallel",
+    "run_xi_tradeoff_serial",
+    "rebuild_xi_tradeoff_result",
+    "save_partial_results",
 ]

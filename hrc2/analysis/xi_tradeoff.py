@@ -13,6 +13,8 @@ over coupling strength and initial field value to find:
 
 from dataclasses import dataclass
 from typing import Optional, Dict, Tuple, List
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import os
 import numpy as np
 from numpy.typing import NDArray
 
@@ -27,9 +29,13 @@ from ..background import BackgroundCosmology, BackgroundSolution
 from ..constraints.stability import check_stability_along_trajectory, StabilityResult
 from ..constraints.observational import (
     check_all_constraints_hrc2,
+    check_bbn_constraint_hrc2,
+    check_ppn_constraints_hrc2,
+    check_stellar_constraints_hrc2,
     HRC2ConstraintResult,
     estimate_delta_H0,
 )
+from ..utils.config import PerformanceConfig
 
 
 @dataclass
@@ -77,6 +83,386 @@ class XiTradeoffResultHRC2:
 
     z_max: float
     constraint_level: str
+
+
+@dataclass
+class SinglePointResult:
+    """Result of evaluating a single (xi, phi0) point.
+
+    Attributes:
+        xi: Coupling strength parameter
+        phi0: Initial field value
+        dynamically_stable: Whether the model is dynamically stable
+        bbn_allowed: Passes BBN constraint
+        ppn_allowed: Passes PPN constraints
+        stellar_allowed: Passes stellar constraints
+        all_constraints_allowed: Passes all observational constraints
+        delta_G_over_G: Fractional G_eff change
+        delta_H0: Estimated Hubble tension contribution
+    """
+    xi: float
+    phi0: float
+    dynamically_stable: bool
+    bbn_allowed: bool
+    ppn_allowed: bool
+    stellar_allowed: bool
+    all_constraints_allowed: bool
+    delta_G_over_G: float
+    delta_H0: float
+
+
+def evaluate_model_point(
+    xi: float,
+    phi0: float,
+    coupling_family: CouplingFamily,
+    potential_type: PotentialType,
+    perf: PerformanceConfig,
+    z_max: float = 1100.0,
+    z_points: int = 300,
+    constraint_level: str = "conservative",
+) -> SinglePointResult:
+    """Evaluate a single model point in the parameter space.
+
+    This function is designed to be called in parallel workers.
+
+    Args:
+        xi: Coupling strength parameter
+        phi0: Initial field value
+        coupling_family: Type of F(phi) coupling
+        potential_type: Type of V(phi) potential
+        perf: Performance configuration
+        z_max: Maximum redshift
+        z_points: Number of redshift points
+        constraint_level: BBN constraint level
+
+    Returns:
+        SinglePointResult with evaluation results
+    """
+    try:
+        # Create parameters for this point
+        params = HRC2Parameters(
+            coupling_family=coupling_family,
+            potential_type=potential_type,
+            xi=xi,
+            alpha=xi,
+            beta=xi,
+            phi_0=phi0,
+            phi_dot_0=0.0,
+        )
+
+        # Create model and solve
+        model = create_model(params)
+        cosmo = BackgroundCosmology(params, model)
+        solution = cosmo.solve(
+            z_max=z_max,
+            z_points=z_points,
+            rtol=perf.rtol,
+            atol=perf.atol,
+        )
+
+        if not solution.success or not solution.geff_valid:
+            return SinglePointResult(
+                xi=xi, phi0=phi0,
+                dynamically_stable=False,
+                bbn_allowed=False, ppn_allowed=False, stellar_allowed=False,
+                all_constraints_allowed=False,
+                delta_G_over_G=np.nan, delta_H0=np.nan
+            )
+
+        # Check stability
+        stability = check_stability_along_trajectory(solution, model)
+        if not stability.is_stable:
+            return SinglePointResult(
+                xi=xi, phi0=phi0,
+                dynamically_stable=False,
+                bbn_allowed=False, ppn_allowed=False, stellar_allowed=False,
+                all_constraints_allowed=False,
+                delta_G_over_G=np.nan, delta_H0=np.nan
+            )
+
+        # Point is dynamically stable - compute metrics
+        dG = abs(solution.G_eff_ratio[0] - solution.G_eff_ratio[-1])
+        dH0 = estimate_delta_H0(dG)
+
+        # Check individual constraints
+        bbn_ok, _ = check_bbn_constraint_hrc2(solution, model, constraint_level)
+        ppn_ok, _, _ = check_ppn_constraints_hrc2(solution, model, params)
+        stellar_ok, _ = check_stellar_constraints_hrc2(solution, model)
+        all_ok = bbn_ok and ppn_ok and stellar_ok
+
+        return SinglePointResult(
+            xi=xi, phi0=phi0,
+            dynamically_stable=True,
+            bbn_allowed=bbn_ok,
+            ppn_allowed=ppn_ok,
+            stellar_allowed=stellar_ok,
+            all_constraints_allowed=all_ok,
+            delta_G_over_G=dG,
+            delta_H0=dH0
+        )
+
+    except Exception:
+        return SinglePointResult(
+            xi=xi, phi0=phi0,
+            dynamically_stable=False,
+            bbn_allowed=False, ppn_allowed=False, stellar_allowed=False,
+            all_constraints_allowed=False,
+            delta_G_over_G=np.nan, delta_H0=np.nan
+        )
+
+
+def rebuild_xi_tradeoff_result(
+    results: List[SinglePointResult],
+    xi_values: NDArray[np.floating],
+    phi0_values: NDArray[np.floating],
+    coupling_family: CouplingFamily,
+    potential_type: PotentialType,
+    z_max: float,
+    constraint_level: str,
+) -> XiTradeoffResultHRC2:
+    """Rebuild XiTradeoffResultHRC2 from list of SinglePointResult.
+
+    Args:
+        results: List of SinglePointResult from parallel evaluation
+        xi_values: Array of xi values scanned
+        phi0_values: Array of phi0 values scanned
+        coupling_family: Coupling family used
+        potential_type: Potential type used
+        z_max: Maximum redshift
+        constraint_level: Constraint level used
+
+    Returns:
+        XiTradeoffResultHRC2 with aggregated results
+    """
+    n_xi = len(xi_values)
+    n_phi0 = len(phi0_values)
+
+    # Initialize result arrays
+    stable_mask = np.zeros((n_xi, n_phi0), dtype=bool)
+    obs_allowed_mask = np.zeros((n_xi, n_phi0), dtype=bool)
+    delta_G_over_G = np.full((n_xi, n_phi0), np.nan)
+    G_eff_0 = np.full((n_xi, n_phi0), np.nan)
+    G_eff_zmax = np.full((n_xi, n_phi0), np.nan)
+
+    # Create lookup for results
+    result_map = {(r.xi, r.phi0): r for r in results}
+
+    for i, xi in enumerate(xi_values):
+        for j, phi0 in enumerate(phi0_values):
+            key = (xi, phi0)
+            if key not in result_map:
+                continue
+
+            r = result_map[key]
+            stable_mask[i, j] = r.dynamically_stable
+            obs_allowed_mask[i, j] = r.all_constraints_allowed
+            delta_G_over_G[i, j] = r.delta_G_over_G
+
+    # Compute per-xi statistics
+    stable_fraction = np.zeros(n_xi)
+    obs_allowed_fraction = np.zeros(n_xi)
+    max_delta_G_stable = np.full(n_xi, np.nan)
+    max_delta_G_allowed = np.full(n_xi, np.nan)
+
+    for i in range(n_xi):
+        n_stable = stable_mask[i, :].sum()
+        n_allowed = obs_allowed_mask[i, :].sum()
+
+        stable_fraction[i] = n_stable / n_phi0
+        obs_allowed_fraction[i] = n_allowed / n_phi0
+
+        if n_stable > 0:
+            max_delta_G_stable[i] = np.nanmax(delta_G_over_G[i, stable_mask[i, :]])
+
+        if n_allowed > 0:
+            max_delta_G_allowed[i] = np.nanmax(delta_G_over_G[i, obs_allowed_mask[i, :]])
+
+    return XiTradeoffResultHRC2(
+        coupling_family=coupling_family,
+        potential_type=potential_type,
+        xi_values=xi_values,
+        phi0_values=phi0_values,
+        stable_mask=stable_mask,
+        obs_allowed_mask=obs_allowed_mask,
+        delta_G_over_G=delta_G_over_G,
+        G_eff_0=G_eff_0,
+        G_eff_zmax=G_eff_zmax,
+        stable_fraction=stable_fraction,
+        obs_allowed_fraction=obs_allowed_fraction,
+        max_delta_G_stable=max_delta_G_stable,
+        max_delta_G_allowed=max_delta_G_allowed,
+        z_max=z_max,
+        constraint_level=constraint_level,
+    )
+
+
+def save_partial_results(
+    results: List[SinglePointResult],
+    xi_values: NDArray[np.floating],
+    phi0_values: NDArray[np.floating],
+    path: str,
+) -> None:
+    """Save partial results to disk in a simple, robust format.
+
+    Uses atomic write (write to .tmp then rename) for crash safety.
+
+    Args:
+        results: List of SinglePointResult evaluated so far
+        xi_values: Full array of xi values in scan
+        phi0_values: Full array of phi0 values in scan
+        path: Output .npz file path
+    """
+    data = {
+        "xi": np.array([r.xi for r in results]),
+        "phi0": np.array([r.phi0 for r in results]),
+        "dynamically_stable": np.array([r.dynamically_stable for r in results]),
+        "bbn_allowed": np.array([r.bbn_allowed for r in results]),
+        "ppn_allowed": np.array([r.ppn_allowed for r in results]),
+        "stellar_allowed": np.array([r.stellar_allowed for r in results]),
+        "all_constraints_allowed": np.array([r.all_constraints_allowed for r in results]),
+        "delta_G_over_G": np.array([r.delta_G_over_G for r in results]),
+        "delta_H0": np.array([r.delta_H0 for r in results]),
+        "xi_grid": np.array(xi_values),
+        "phi0_grid": np.array(phi0_values),
+    }
+    tmp_path = path + ".tmp"
+    np.savez(tmp_path, **data)
+    os.replace(tmp_path, path)
+
+
+def run_xi_tradeoff_parallel(
+    xi_values: NDArray[np.floating],
+    phi0_values: NDArray[np.floating],
+    coupling_family: CouplingFamily,
+    potential_type: PotentialType = PotentialType.QUADRATIC,
+    perf: Optional[PerformanceConfig] = None,
+    z_max: float = 1100.0,
+    z_points: int = 300,
+    constraint_level: str = "conservative",
+    verbose: bool = True,
+) -> XiTradeoffResultHRC2:
+    """Run parallel xi-tradeoff scan using ProcessPoolExecutor.
+
+    Args:
+        xi_values: Array of xi values to scan
+        phi0_values: Array of phi0 values to scan
+        coupling_family: Type of F(phi) coupling
+        potential_type: Type of V(phi) potential
+        perf: Performance configuration (uses defaults if None)
+        z_max: Maximum redshift
+        z_points: Number of redshift points
+        constraint_level: BBN constraint level
+        verbose: Print progress
+
+    Returns:
+        XiTradeoffResultHRC2 with scan results
+    """
+    if perf is None:
+        perf = PerformanceConfig()
+
+    tasks = [(xi, phi0) for xi in xi_values for phi0 in phi0_values]
+    total = len(tasks)
+
+    if verbose:
+        print(f"Starting parallel scan: {len(xi_values)} xi x {len(phi0_values)} phi0 = {total} points")
+        print(f"Using {perf.n_workers} workers")
+
+    results: List[SinglePointResult] = []
+
+    # Incremental save configuration
+    SAVE_INTERVAL = max(10, total // 50)
+    partial_path = "results/hrc2_scan/hrc2_partial_scan.npz"
+    os.makedirs(os.path.dirname(partial_path), exist_ok=True)
+
+    with ProcessPoolExecutor(max_workers=perf.n_workers) as executor:
+        future_map = {
+            executor.submit(
+                evaluate_model_point,
+                xi, phi0,
+                coupling_family, potential_type, perf,
+                z_max, z_points, constraint_level
+            ): (xi, phi0)
+            for (xi, phi0) in tasks
+        }
+
+        for i, future in enumerate(as_completed(future_map)):
+            xi, phi0 = future_map[future]
+            try:
+                res = future.result()
+            except Exception:
+                res = SinglePointResult(
+                    xi=xi, phi0=phi0,
+                    dynamically_stable=False,
+                    bbn_allowed=False, ppn_allowed=False, stellar_allowed=False,
+                    all_constraints_allowed=False,
+                    delta_G_over_G=np.nan, delta_H0=np.nan
+                )
+            results.append(res)
+
+            progress_step = max(1, total // 20)
+            if verbose and (i + 1) % progress_step == 0:
+                print(f"[parallel] {i + 1}/{total} ({100*(i+1)/total:.0f}%)")
+
+            # Incremental save
+            if (i + 1) % SAVE_INTERVAL == 0:
+                if verbose:
+                    print(f"[parallel] saving partial results at {i + 1}/{total}")
+                save_partial_results(results, xi_values, phi0_values, partial_path)
+
+    # Final save of all results
+    save_partial_results(results, xi_values, phi0_values, partial_path)
+
+    if verbose:
+        print(f"Parallel scan complete. Rebuilding result structure...")
+
+    return rebuild_xi_tradeoff_result(
+        results, xi_values, phi0_values,
+        coupling_family, potential_type, z_max, constraint_level
+    )
+
+
+def run_xi_tradeoff_serial(
+    xi_values: NDArray[np.floating],
+    phi0_values: NDArray[np.floating],
+    coupling_family: CouplingFamily,
+    potential_type: PotentialType = PotentialType.QUADRATIC,
+    perf: Optional[PerformanceConfig] = None,
+    z_max: float = 1100.0,
+    z_points: int = 300,
+    constraint_level: str = "conservative",
+    verbose: bool = True,
+) -> XiTradeoffResultHRC2:
+    """Run serial xi-tradeoff scan (for testing/comparison).
+
+    Same interface as run_xi_tradeoff_parallel but runs sequentially.
+    """
+    if perf is None:
+        perf = PerformanceConfig()
+
+    results: List[SinglePointResult] = []
+    total = len(xi_values) * len(phi0_values)
+    count = 0
+
+    if verbose:
+        print(f"Starting serial scan: {len(xi_values)} xi x {len(phi0_values)} phi0 = {total} points")
+
+    for xi in xi_values:
+        for phi0 in phi0_values:
+            count += 1
+            res = evaluate_model_point(
+                xi, phi0,
+                coupling_family, potential_type, perf,
+                z_max, z_points, constraint_level
+            )
+            results.append(res)
+
+            if verbose and count % max(1, total // 10) == 0:
+                print(f"[serial] {count}/{total} ({100*count/total:.0f}%)")
+
+    return rebuild_xi_tradeoff_result(
+        results, xi_values, phi0_values,
+        coupling_family, potential_type, z_max, constraint_level
+    )
 
 
 def scan_xi_tradeoff_hrc2(
