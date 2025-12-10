@@ -169,18 +169,18 @@ def evaluate_model_point(
         cosmo = BackgroundCosmology(params, model)
 
         try:
+            # Pass timeout to ODE solver for real enforcement during integration
             solution = cosmo.solve(
                 z_max=z_max,
                 z_points=z_points,
                 rtol=perf.rtol,
                 atol=perf.atol,
+                timeout=timeout,
             )
-        except (RuntimeError, Exception):
-            # Early exit from ODE solver (F invalid, G_eff out of range, etc.)
+        except RuntimeError as e:
+            # Early exit from ODE solver (F invalid, G_eff out of range, timeout, etc.)
             return _invalid_result()
-
-        # Check timeout after integration
-        if time.time() - start_time > timeout:
+        except Exception:
             return _invalid_result()
 
         if not solution.success or not solution.geff_valid:
@@ -333,8 +333,11 @@ def save_partial_results(
         results: List of SinglePointResult evaluated so far
         xi_values: Full array of xi values in scan
         phi0_values: Full array of phi0 values in scan
-        path: Output .npz file path
+        path: Output .npz file path (must end in .npz)
     """
+    if not results:
+        return  # Nothing to save
+
     data = {
         "xi": np.array([r.xi for r in results]),
         "phi0": np.array([r.phi0 for r in results]),
@@ -347,9 +350,12 @@ def save_partial_results(
         "delta_H0": np.array([r.delta_H0 for r in results]),
         "xi_grid": np.array(xi_values),
         "phi0_grid": np.array(phi0_values),
+        "n_completed": len(results),
     }
-    tmp_path = path + ".tmp"
-    np.savez(tmp_path, **data)
+    # np.savez adds .npz automatically, so strip it for tmp file
+    base_path = path[:-4] if path.endswith('.npz') else path
+    tmp_path = base_path + ".tmp.npz"
+    np.savez_compressed(tmp_path, **data)
     os.replace(tmp_path, path)
 
 
@@ -392,8 +398,7 @@ def run_xi_tradeoff_parallel(
 
     results: List[SinglePointResult] = []
 
-    # Incremental save configuration
-    SAVE_INTERVAL = max(10, total // 50)
+    # Partial save path
     partial_path = "results/hrc2_scan/hrc2_partial_scan.npz"
     os.makedirs(os.path.dirname(partial_path), exist_ok=True)
 
@@ -412,7 +417,7 @@ def run_xi_tradeoff_parallel(
             xi, phi0 = future_map[future]
             try:
                 res = future.result()
-            except Exception:
+            except Exception as e:
                 res = SinglePointResult(
                     xi=xi, phi0=phi0,
                     dynamically_stable=False,
@@ -422,17 +427,22 @@ def run_xi_tradeoff_parallel(
                 )
             results.append(res)
 
-            progress_step = max(1, total // 20)
-            if verbose and (i + 1) % progress_step == 0:
-                print(f"[parallel] {i + 1}/{total} ({100*(i+1)/total:.0f}%)")
+            # Per-completion logging (always, for debugging)
+            if verbose:
+                print(
+                    f"[{i+1}/{total}] xi={xi:.3e}, phi0={phi0:.3f}, "
+                    f"stable={res.dynamically_stable}, allowed={res.all_constraints_allowed}, "
+                    f"dG={res.delta_G_over_G:.4f}" if not np.isnan(res.delta_G_over_G) else
+                    f"[{i+1}/{total}] xi={xi:.3e}, phi0={phi0:.3f}, "
+                    f"stable={res.dynamically_stable}, allowed={res.all_constraints_allowed}, dG=NaN"
+                )
 
-            # Incremental save
-            if (i + 1) % SAVE_INTERVAL == 0:
-                if verbose:
-                    print(f"[parallel] saving partial results at {i + 1}/{total}")
-                save_partial_results(results, xi_values, phi0_values, partial_path)
+            # Save after EVERY completion for visibility
+            save_partial_results(results, xi_values, phi0_values, partial_path)
 
-    # Final save of all results
+    # Final save
+    if verbose:
+        print(f"Scan complete. Final save: {len(results)} results.")
     save_partial_results(results, xi_values, phi0_values, partial_path)
 
     if verbose:

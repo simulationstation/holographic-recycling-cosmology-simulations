@@ -19,6 +19,7 @@ We evolve in redshift z with dy/dz = -(1+z)^{-1} * H^{-1} * dy/dt
 
 from dataclasses import dataclass
 from typing import Optional, Tuple, List
+import time
 import numpy as np
 from numpy.typing import NDArray
 from scipy.integrate import solve_ivp
@@ -140,6 +141,7 @@ class BackgroundCosmology:
         method: str = 'RK45',
         rtol: float = 1e-8,
         atol: float = 1e-10,
+        timeout: Optional[float] = None,
     ) -> BackgroundSolution:
         """Integrate background equations from z=0 to z_max.
 
@@ -149,6 +151,7 @@ class BackgroundCosmology:
             method: ODE solver method
             rtol: Relative tolerance
             atol: Absolute tolerance
+            timeout: Maximum wall-clock time in seconds (None = no limit)
 
         Returns:
             BackgroundSolution with evolution history
@@ -175,6 +178,11 @@ class BackgroundCosmology:
         self._geff_valid = True
         self._stability_valid = True
         self._divergence_z = None
+
+        # Timeout tracking
+        self._start_time = time.time()
+        self._timeout = timeout
+        self._rhs_call_count = 0
 
         # Solve ODE
         try:
@@ -273,6 +281,13 @@ class BackgroundCosmology:
             dy/dz
         """
         phi, phi_prime = y
+
+        # Timeout check (every 100 RHS calls to avoid overhead)
+        self._rhs_call_count += 1
+        if self._timeout is not None and self._rhs_call_count % 100 == 0:
+            elapsed = time.time() - self._start_time
+            if elapsed > self._timeout:
+                raise RuntimeError(f"Integration timeout after {elapsed:.1f}s")
 
         # Early exit: F(phi) below safety threshold
         F = self.model.F(phi)
