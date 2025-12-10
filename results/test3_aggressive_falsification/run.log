@@ -1,0 +1,81 @@
+============================================================
+TEST 3: Aggressive Falsification with CAMB
+============================================================
+
+CAMB available: True
+H0 targets: [68.0, 69.0, 70.0, 71.0, 72.0, 73.0]
+
+Computing LCDM reference...
+  LCDM theta_s = 8.953462e-01
+Computing LCDM CMB spectra...
+CAMB error: 
+
+
+========================================
+Testing H0 = 68.0 km/s/Mpc
+========================================
+Finding HMDE parameters...
+  Found: delta_w=0.1000, a_w=0.5000
+  theta_s deviation: 0.0094%
+  CPL fit: w0=-0.9857, wa=0.0751
+
+========================================
+Testing H0 = 69.0 km/s/Mpc
+========================================
+Finding HMDE parameters...
+  Found: delta_w=0.1000, a_w=0.5000
+  theta_s deviation: 0.0094%
+  CPL fit: w0=-0.9857, wa=0.0751
+
+========================================
+Testing H0 = 70.0 km/s/Mpc
+========================================
+Finding HMDE parameters...
+  Found: delta_w=0.1000, a_w=0.5000
+  theta_s deviation: 0.0094%
+  CPL fit: w0=-0.9857, wa=0.0751
+
+========================================
+Testing H0 = 71.0 km/s/Mpc
+========================================
+Finding HMDE parameters...
+  Found: delta_w=0.1000, a_w=0.5000
+  theta_s deviation: 0.0094%
+  CPL fit: w0=-0.9857, wa=0.0751
+
+========================================
+Testing H0 = 72.0 km/s/Mpc
+========================================
+Finding HMDE parameters...
+  Found: delta_w=0.1000, a_w=0.5000
+  theta_s deviation: 0.0094%
+  CPL fit: w0=-0.9857, wa=0.0751
+
+========================================
+Testing H0 = 73.0 km/s/Mpc
+========================================
+Finding HMDE parameters...
+  Found: delta_w=0.1000, a_w=0.5000
+  theta_s deviation: 0.0094%
+  CPL fit: w0=-0.9857, wa=0.0751
+
+============================================================
+FALSIFICATION TEST SUMMARY
+============================================================
+
+H0 Target | theta_s dev | w0     | wa     | Delta chi2
+------------------------------------------------------------
+   68.0   |  0.0094% | -0.986 |  0.075 | N/A
+   69.0   |  0.0094% | -0.986 |  0.075 | N/A
+   70.0   |  0.0094% | -0.986 |  0.075 | N/A
+   71.0   |  0.0094% | -0.986 |  0.075 | N/A
+   72.0   |  0.0094% | -0.986 |  0.075 | N/A
+   73.0   |  0.0094% | -0.986 |  0.075 | N/A
+
+Results saved to results/test3_aggressive_falsification
+
+============================================================
+KEY FINDING:
+============================================================
+H0 = 72.0: Passes theta_s, CMB chi^2 unknown
+H0 = 73.0: Passes theta_s, CMB chi^2 unknown

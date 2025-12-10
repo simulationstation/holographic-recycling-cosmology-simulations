@@ -1,0 +1,157 @@
+# HMDE T06D (Horizon-Memory Dark Energy) Configuration for Cobaya + CAMB
+# Datasets: Planck 2018 TTTEEE_lite+lensing + BAO + Pantheon+ SNe Ia
+# Note: Using lite likelihood to avoid lowl nuisance parameter issues
+#
+# T06D Model: w_eff(a) = w_base + delta_w / (1 + (a/a_w)^m)
+# Parameters fitted to effective (w0, wa) CPL parameterization for CAMB
+
+theory:
+  hrc2.cobaya_hmde_model.HMDE_T06D:
+    stop_at_error: true
+    m_eos: 2.0
+    tau_hor: 0.1
+    w_base: -1.0
+
+  camb:
+    stop_at_error: false
+    extra_args:
+      halofit_version: mead2020
+      lens_potential_accuracy: 1
+      num_massive_neutrinos: 1
+      nnu: 3.046
+      dark_energy_model: ppf
+
+likelihood:
+  planck_2018_highl_plik.TTTEEE_lite:
+  planck_2018_lensing.clik:
+  bao.sdss_dr12_consensus_bao:
+  sn.pantheonplus:
+
+params:
+  # T06D HORIZON-MEMORY PARAMETERS
+  delta_w:
+    prior:
+      min: -0.3
+      max: 0.05
+    ref: -0.033
+    proposal: 0.02
+    latex: \Delta w
+
+  a_w:
+    prior:
+      min: 0.15
+      max: 0.45
+    ref: 0.28
+    proposal: 0.03
+    latex: a_w
+
+  # w0_fld and wa_fld are computed by HMDE_T06D theory and passed directly to CAMB
+  # They are not declared here as derived params since the theory handles them
+
+  # STANDARD LCDM PARAMETERS
+  logA:
+    prior:
+      min: 2.5
+      max: 3.5
+    ref: 3.044
+    proposal: 0.01
+    latex: \ln(10^{10} A_\mathrm{s})
+    drop: true
+
+  As:
+    value: "lambda logA: 1e-10*np.exp(logA)"
+    latex: A_\mathrm{s}
+
+  ns:
+    prior:
+      min: 0.9
+      max: 1.05
+    ref: 0.965
+    proposal: 0.005
+    latex: n_\mathrm{s}
+
+  H0:
+    prior:
+      min: 60
+      max: 80
+    ref: 67.4
+    proposal: 0.5
+    latex: H_0
+
+  ombh2:
+    prior:
+      min: 0.020
+      max: 0.024
+    ref: 0.02237
+    proposal: 0.0002
+    latex: \Omega_\mathrm{b} h^2
+
+  omch2:
+    prior:
+      min: 0.10
+      max: 0.14
+    ref: 0.120
+    proposal: 0.002
+    latex: \Omega_\mathrm{c} h^2
+
+  tau:
+    prior:
+      min: 0.03
+      max: 0.09
+    ref: 0.054
+    proposal: 0.01
+    latex: \tau_\mathrm{reio}
+
+  mnu:
+    value: 0.06
+    latex: \Sigma m_\nu
+
+  A_planck:
+    prior:
+      min: 0.95
+      max: 1.05
+    ref: 1.0
+    proposal: 0.002
+    latex: y_\mathrm{cal}
+    renames: calPlanck
+
+  # Derived parameters
+  omegam:
+    latex: \Omega_\mathrm{m}
+
+  sigma8:
+    latex: \sigma_8
+
+  s8:
+    derived: "lambda sigma8, omegam: sigma8 * (omegam/0.3)**0.5"
+    latex: S_8
+
+  rdrag:
+    latex: r_\mathrm{drag}
+
+  age:
+    latex: \mathrm{Age}/\mathrm{Gyr}
+
+sampler:
+  mcmc:
+    burn_in: 0
+    max_samples: 5000
+    max_tries: 100000
+    Rminus1_stop: 0.05
+    Rminus1_cl_stop: 0.3
+    proposal_scale: 2.4
+    covmat: auto
+    output_every: 60s
+    learn_every: 40d
+    blocking:
+      - [1, [delta_w, a_w]]
+      - [1, [logA, ns]]
+      - [1, [ombh2, omch2]]
+      - [1, [H0, tau]]
+      - [2, [A_planck]]
+    drag: false
+    oversample_power: 0.4
+
+output: results/mcmc/hmde_t06d_planck_bao_sne/chains
+resume: false
+force: true

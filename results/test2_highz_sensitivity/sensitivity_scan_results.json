@@ -1,0 +1,49 @@
+{
+  "config": {
+    "delta_w_range": [
+      -0.5,
+      0.1
+    ],
+    "a_w_range": [
+      0.1,
+      0.6
+    ],
+    "lambda_hor_range": [
+      0.01,
+      0.4
+    ],
+    "n_delta_w": 15,
+    "n_a_w": 15,
+    "n_lambda_hor": 10,
+    "constraint_thresholds": {
+      "theta_s_max_dev": 0.001,
+      "D_L_max_dev": 0.02,
+      "bao_max_dev": 0.01
+    }
+  },
+  "lcdm_reference": {
+    "H0": 67.4,
+    "theta_s": 7.055742806568551,
+    "r_drag": 93.04464358332379,
+    "D_L_05": 2926.939384310276,
+    "bao_05": 20.97157716689071
+  },
+  "statistics": {
+    "n_evaluated": 2250,
+    "n_passed": 0,
+    "pass_fraction": 0.0
+  },
+  "max_H_deviations_passing": {
+    "0.5": 0.0,
+    "2.0": 0.0,
+    "5.0": 0.0,
+    "10.0": 0.0,
+    "50.0": 0.0,
+    "100.0": 0.0,
+    "500.0": 0.0,
+    "1000.0": 0.0,
+    "1089.0": 0.0
+  },
+  "best_highz_point": null,
+  "passing_results": []
+}

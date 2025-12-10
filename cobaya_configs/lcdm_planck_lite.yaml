@@ -1,0 +1,119 @@
+# LCDM Configuration with Planck Lite-only likelihood (for faster testing)
+# This minimal config avoids complex nuisance parameters
+
+theory:
+  camb:
+    stop_at_error: false
+    extra_args:
+      halofit_version: mead2020
+      bbn_predictor: PArthENoPE_880.2_standard
+      lens_potential_accuracy: 1
+      num_massive_neutrinos: 1
+      nnu: 3.046
+
+likelihood:
+  planck_2018_highl_plik.TTTEEE_lite:
+
+params:
+  # Primordial amplitude (log form)
+  logA:
+    prior:
+      min: 2.5
+      max: 3.5
+    ref: 3.044
+    proposal: 0.01
+    latex: \ln(10^{10} A_\mathrm{s})
+    drop: true
+
+  As:
+    value: "lambda logA: 1e-10*np.exp(logA)"
+    latex: A_\mathrm{s}
+
+  # Spectral index
+  ns:
+    prior:
+      min: 0.9
+      max: 1.05
+    ref: 0.965
+    proposal: 0.01
+    latex: n_\mathrm{s}
+
+  # Hubble parameter
+  H0:
+    prior:
+      min: 60
+      max: 80
+    ref: 67.4
+    proposal: 1.0
+    latex: H_0
+
+  # Baryon density
+  ombh2:
+    prior:
+      min: 0.019
+      max: 0.025
+    ref: 0.02237
+    proposal: 0.001
+    latex: \Omega_\mathrm{b} h^2
+
+  # Cold dark matter density
+  omch2:
+    prior:
+      min: 0.10
+      max: 0.14
+    ref: 0.120
+    proposal: 0.005
+    latex: \Omega_\mathrm{c} h^2
+
+  # Optical depth to reionization
+  tau:
+    prior:
+      min: 0.03
+      max: 0.09
+    ref: 0.054
+    proposal: 0.01
+    latex: \tau_\mathrm{reio}
+
+  # Neutrino mass sum (fixed)
+  mnu:
+    value: 0.06
+    latex: \Sigma m_\nu
+
+  # Planck calibration (required by lite likelihood)
+  A_planck:
+    prior:
+      min: 0.95
+      max: 1.05
+    ref: 1.0
+    proposal: 0.005
+    latex: y_\mathrm{cal}
+    renames: calPlanck
+
+  # Derived parameters
+  omegam:
+    latex: \Omega_\mathrm{m}
+
+  sigma8:
+    latex: \sigma_8
+
+  s8:
+    derived: "lambda sigma8, omegam: sigma8 * (omegam/0.3)**0.5"
+    latex: S_8
+
+sampler:
+  mcmc:
+    burn_in: 0
+    max_samples: 2000
+    max_tries: 10000
+    Rminus1_stop: 0.1
+    Rminus1_cl_stop: 0.5
+    proposal_scale: 2.4
+    covmat: auto
+    output_every: 60s
+    learn_every: 40d
+    drag: false
+    oversample_power: 0.4
+
+output: results/mcmc/lcdm_lite/chains
+resume: false
+force: true

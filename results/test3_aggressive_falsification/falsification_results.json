@@ -1,0 +1,121 @@
+{
+  "config": {
+    "H0_targets": [
+      68.0,
+      69.0,
+      70.0,
+      71.0,
+      72.0,
+      73.0
+    ],
+    "CAMB_available": true
+  },
+  "lcdm_reference": {
+    "H0": 67.4,
+    "theta_s": 0.8953461545195972
+  },
+  "results": [
+    {
+      "H0_target": 68.0,
+      "H0_achieved": 68.0,
+      "delta_w": 0.1,
+      "a_w": 0.5,
+      "lambda_hor": 0.1,
+      "w0": -0.985727665319589,
+      "wa": 0.07506211489821783,
+      "theta_s": 0.8952617427747921,
+      "theta_s_dev_percent": 0.009427833512101753,
+      "chi2_TT": null,
+      "chi2_EE": null,
+      "chi2_total": null,
+      "delta_chi2_vs_lcdm": null,
+      "success": true,
+      "message": "Success"
+    },
+    {
+      "H0_target": 69.0,
+      "H0_achieved": 69.0,
+      "delta_w": 0.1,
+      "a_w": 0.5,
+      "lambda_hor": 0.1,
+      "w0": -0.985727665319589,
+      "wa": 0.07506211489821783,
+      "theta_s": 0.8952617427747922,
+      "theta_s_dev_percent": 0.009427833512089352,
+      "chi2_TT": null,
+      "chi2_EE": null,
+      "chi2_total": null,
+      "delta_chi2_vs_lcdm": null,
+      "success": true,
+      "message": "Success"
+    },
+    {
+      "H0_target": 70.0,
+      "H0_achieved": 70.0,
+      "delta_w": 0.1,
+      "a_w": 0.5,
+      "lambda_hor": 0.1,
+      "w0": -0.985727665319589,
+      "wa": 0.07506211489821783,
+      "theta_s": 0.8952617427747913,
+      "theta_s_dev_percent": 0.009427833512188554,
+      "chi2_TT": null,
+      "chi2_EE": null,
+      "chi2_total": null,
+      "delta_chi2_vs_lcdm": null,
+      "success": true,
+      "message": "Success"
+    },
+    {
+      "H0_target": 71.0,
+      "H0_achieved": 71.0,
+      "delta_w": 0.1,
+      "a_w": 0.5,
+      "lambda_hor": 0.1,
+      "w0": -0.985727665319589,
+      "wa": 0.07506211489821783,
+      "theta_s": 0.8952617427747911,
+      "theta_s_dev_percent": 0.009427833512213353,
+      "chi2_TT": null,
+      "chi2_EE": null,
+      "chi2_total": null,
+      "delta_chi2_vs_lcdm": null,
+      "success": true,
+      "message": "Success"
+    },
+    {
+      "H0_target": 72.0,
+      "H0_achieved": 72.0,
+      "delta_w": 0.1,
+      "a_w": 0.5,
+      "lambda_hor": 0.1,
+      "w0": -0.985727665319589,
+      "wa": 0.07506211489821783,
+      "theta_s": 0.8952617427747915,
+      "theta_s_dev_percent": 0.009427833512163754,
+      "chi2_TT": null,
+      "chi2_EE": null,
+      "chi2_total": null,
+      "delta_chi2_vs_lcdm": null,
+      "success": true,
+      "message": "Success"
+    },
+    {
+      "H0_target": 73.0,
+      "H0_achieved": 73.0,
+      "delta_w": 0.1,
+      "a_w": 0.5,
+      "lambda_hor": 0.1,
+      "w0": -0.985727665319589,
+      "wa": 0.07506211489821783,
+      "theta_s": 0.8952617427747914,
+      "theta_s_dev_percent": 0.009427833512176152,
+      "chi2_TT": null,
+      "chi2_EE": null,
+      "chi2_total": null,
+      "delta_chi2_vs_lcdm": null,
+      "success": true,
+      "message": "Success"
+    }
+  ]
+}

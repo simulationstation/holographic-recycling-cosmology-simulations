@@ -1,0 +1,68 @@
+============================================================
+TEST 2: High-redshift Sensitivity Scan
+============================================================
+
+Parameter ranges:
+  delta_w: [-0.5, 0.1], n=15
+  a_w: [0.1, 0.6], n=15
+  lambda_hor: [0.01, 0.4], n=10
+
+Total points: 2250
+
+Computing LCDM reference...
+  LCDM theta_s = 7.055743e+00
+  LCDM r_drag = 93.04 Mpc
+  LCDM D_L(z=0.5) = 2926.94 Mpc
+
+Running scan...
+  Progress: 100/2250 (4.4%), passed: 0, ETA: 70s
+  Progress: 200/2250 (8.9%), passed: 0, ETA: 68s
+  Progress: 300/2250 (13.3%), passed: 0, ETA: 65s
+  Progress: 400/2250 (17.8%), passed: 0, ETA: 62s
+  Progress: 500/2250 (22.2%), passed: 0, ETA: 59s
+  Progress: 600/2250 (26.7%), passed: 0, ETA: 50s
+  Progress: 700/2250 (31.1%), passed: 0, ETA: 48s
+  Progress: 800/2250 (35.6%), passed: 0, ETA: 47s
+  Progress: 900/2250 (40.0%), passed: 0, ETA: 44s
+  Progress: 1000/2250 (44.4%), passed: 0, ETA: 42s
+  Progress: 1100/2250 (48.9%), passed: 0, ETA: 40s
+  Progress: 1200/2250 (53.3%), passed: 0, ETA: 37s
+  Progress: 1300/2250 (57.8%), passed: 0, ETA: 34s
+  Progress: 1400/2250 (62.2%), passed: 0, ETA: 29s
+  Progress: 1500/2250 (66.7%), passed: 0, ETA: 26s
+  Progress: 1600/2250 (71.1%), passed: 0, ETA: 23s
+  Progress: 1700/2250 (75.6%), passed: 0, ETA: 20s
+  Progress: 1800/2250 (80.0%), passed: 0, ETA: 16s
+  Progress: 1900/2250 (84.4%), passed: 0, ETA: 13s
+  Progress: 2000/2250 (88.9%), passed: 0, ETA: 9s
+  Progress: 2100/2250 (93.3%), passed: 0, ETA: 6s
+  Progress: 2200/2250 (97.8%), passed: 0, ETA: 2s
+
+Scan completed in 82.2 seconds
+Total evaluated: 2250
+Passed all constraints: 0
+
+============================================================
+HIGH-Z SENSITIVITY ANALYSIS
+============================================================
+
+Maximum |delta H(z)/H(z)| (%) for points passing all constraints:
+--------------------------------------------------
+  z =     0.5: +0.0000%
+  z =     2.0: +0.0000%
+  z =     5.0: +0.0000%
+  z =    10.0: +0.0000%
+  z =    50.0: +0.0000%
+  z =   100.0: +0.0000%
+  z =   500.0: +0.0000%
+  z =  1000.0: +0.0000%
+  z =  1089.0: +0.0000%
+
+Results saved to results/test2_highz_sensitivity
+
+============================================================
+KEY FINDING:
+============================================================
+Maximum H(z=1089) deviation: 0.0000%
+=> HMDE has NEGLIGIBLE impact at recombination (< 0.01%)
+=> Cannot detectably alter CMB physics while satisfying constraints
