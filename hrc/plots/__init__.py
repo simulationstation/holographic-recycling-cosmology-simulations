@@ -23,7 +23,9 @@ from .potential_comparison import (
 )
 from .xi_tradeoff import (
     plot_max_delta_G_vs_xi,
+    plot_max_delta_G_with_constraints,
     plot_stability_map,
+    plot_constraint_breakdown,
     plot_delta_G_vs_phi0,
     plot_stable_fraction_vs_xi,
     create_xi_tradeoff_summary_figure,
@@ -55,7 +57,9 @@ __all__ = [
     "DEFAULT_POTENTIALS",
     # Xi tradeoff plots
     "plot_max_delta_G_vs_xi",
+    "plot_max_delta_G_with_constraints",
     "plot_stability_map",
+    "plot_constraint_breakdown",
     "plot_delta_G_vs_phi0",
     "plot_stable_fraction_vs_xi",
     "create_xi_tradeoff_summary_figure",
