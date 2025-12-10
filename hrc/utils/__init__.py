@@ -2,7 +2,15 @@
 
 from .constants import PhysicalConstants, PLANCK_UNITS, SI_UNITS
 from .config import HRCConfig, HRCParameters
-from .numerics import NumericalConfig, safe_divide, check_divergence
+from .numerics import (
+    NumericalConfig,
+    safe_divide,
+    check_divergence,
+    GeffDivergenceError,
+    GeffValidityResult,
+    compute_critical_phi,
+    check_geff_validity,
+)
 
 __all__ = [
     "PhysicalConstants",
@@ -13,4 +21,8 @@ __all__ = [
     "NumericalConfig",
     "safe_divide",
     "check_divergence",
+    "GeffDivergenceError",
+    "GeffValidityResult",
+    "compute_critical_phi",
+    "check_geff_validity",
 ]

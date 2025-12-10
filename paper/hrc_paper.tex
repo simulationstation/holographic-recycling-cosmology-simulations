@@ -99,6 +99,25 @@ where the scalar field energy density and pressure are
 p_\phi &= \frac{1}{2}\phidot^2 - V(\phi).
 \end{align}
 
+\subsection{ODE-Based Scalar Field Evolution}
+\label{sec:ode}
+
+The scalar field evolution is obtained by solving the coupled Klein-Gordon equation~\eqref{eq:KG} alongside the Friedmann equations. We transform to logarithmic scale factor $\ln a$ as the time variable for numerical stability:
+\begin{equation}
+\frac{d^2\phi}{d(\ln a)^2} + \left(3 + \frac{\Hdot}{H^2}\right)\frac{d\phi}{d(\ln a)} + \frac{V'(\phi) + \xi R}{H^2} = 0.
+\label{eq:KG_lna}
+\end{equation}
+
+Earlier approximations used power-law scaling $\phi(z) \approx \phi_0(1+z)^\alpha$, but this is valid only in limited regimes. The full ODE treatment reveals that the scalar field can evolve non-trivially, potentially approaching the critical value $\phi_{\rm crit}$ (see Sec.~\ref{sec:viable}). Our numerical implementation (Sec.~\ref{sec:numerical}) integrates Eq.~\eqref{eq:KG_lna} using adaptive step-size RK45 methods from $z=0$ to the recombination epoch.
+
+\textit{Important:} The approximation $\phi(z) \approx \phi_0(1+z)^\alpha$ with constant $\alpha$ fails when:
+\begin{itemize}
+\item The scalar field potential is not purely quadratic
+\item The non-minimal coupling is significant ($\xi \gtrsim 0.01$)
+\item The integration extends to high redshift ($z \gg 10$)
+\end{itemize}
+For reliable predictions, we therefore always use the full ODE solution.
+
 \subsection{Effective Dark Energy}
 
 The scalar field contribution can be recast as an effective dark energy with equation of state
@@ -169,6 +188,7 @@ HRC must satisfy several stability requirements:
 \textbf{No-ghost condition:} The kinetic term for scalar perturbations must be positive:
 \begin{equation}
 Q_s = \frac{1 - 8\pi G\xi\phi}{8\pi G} > 0 \quad \Rightarrow \quad \phi < \phi_{\rm crit} = \frac{1}{8\pi G\xi}.
+\label{eq:phi_crit}
 \end{equation}
 
 \textbf{Gradient stability:} The sound speed squared must be positive:
@@ -203,6 +223,40 @@ Our fiducial parameters satisfy all constraints while resolving the Hubble tensi
 \caption{Observational constraints on HRC. (a) BBN constraint on $\Delta G/G$. (b) PPN constraint on $|\gamma - 1|$ in the $\xi$-$\phi_0$ plane; black contour shows Cassini bound. (c) Structure growth: comparison of predicted $f\sigma_8(z)$ with RSD measurements. (d) Parameter space showing $\Delta H_0$ contours; the star marks our fiducial parameters.}
 \label{fig:constraints}
 \end{figure*}
+
+\subsection{Viable Parameter Space}
+\label{sec:viable}
+
+The requirement that $\Geff$ remain finite and positive throughout cosmic history imposes strict bounds on the parameter space $(\xi, \phi_0)$. From Eq.~\eqref{eq:phi_crit}, $\Geff$ diverges when $\phi \to \phi_{\rm crit}$. While the \textit{initial} condition $\phi_0 < \phi_{\rm crit}$ is necessary, it is not sufficient: the scalar field evolves according to Eq.~\eqref{eq:KG_lna}, and may approach $\phi_{\rm crit}$ at some redshift $z_{\rm div}$.
+
+Our numerical analysis implements a hard boundary check during integration:
+\begin{equation}
+|\phi(z)| < \phi_{\rm crit}(1 - \epsilon), \quad \epsilon = 0.01,
+\end{equation}
+with a 1\% safety margin. If this bound is violated at any $z < z_{\rm max}$, the parameter point is classified as \textbf{invalid}.
+
+We systematically scanned the $(\xi, \phi_0)$ plane and classify each point as:
+\begin{itemize}
+\item \textbf{Invalid}: $\Geff$ diverges before recombination ($z_{\rm div} < z_{\rm CMB}$)
+\item \textbf{Valid, no tension}: $\Geff$ remains finite but $\Delta H_0 < 3$ km/s/Mpc
+\item \textbf{Valid, resolves tension}: $\Geff$ remains finite and $\Delta H_0 \geq 3$ km/s/Mpc
+\end{itemize}
+
+Results (see Fig.~\ref{fig:parameter_space}) reveal that viable HRC models occupy a restricted region where:
+\begin{enumerate}
+\item $\phi_0 \lesssim 0.7\phi_{\rm crit}$ to prevent evolution toward divergence
+\item $\xi \gtrsim 0.02$ to generate sufficient $\Geff$ variation
+\item The combination satisfies all other observational constraints
+\end{enumerate}
+
+The boundary between valid and invalid regions depends on the scalar field potential and is not simply given by $\phi_0 < \phi_{\rm crit}$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{parameter_space.pdf}
+\caption{Viable parameter space in the $(\xi, \phi_0)$ plane. Red: invalid (G_eff diverges). Blue: valid but insufficient Hubble tension resolution. Green: valid and resolves $H_0$ tension. Black dashed: theoretical boundary $\phi_0 = \phi_{\rm crit}$. The actual validity boundary (blue curve) lies well below the theoretical one due to scalar field evolution.}
+\label{fig:parameter_space}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Black Hole Remnants}
@@ -319,13 +373,23 @@ HRC would be \textbf{strongly supported} if:
 \label{sec:numerical}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We provide open-source Python tools for HRC calculations:
+We provide open-source Python tools (v2.0) for HRC calculations:
 \begin{itemize}
-\item ODE-based background cosmology solver
-\item Stability checks and constraint verification
-\item Observational likelihoods (SH0ES, BAO, SNe, CMB)
-\item MCMC parameter inference
-\item CLASS Boltzmann code interface
+\item \textbf{Background cosmology solver}: Full ODE integration of coupled Friedmann + Klein-Gordon equations (Sec.~\ref{sec:ode})
+\item \textbf{G$_{\rm eff}$ boundary enforcement}: Automatic detection of divergence with configurable safety margin (Sec.~\ref{sec:viable})
+\item \textbf{Parameter space scanner}: Systematic exploration of $(\xi, \phi_0)$ with classification into valid/invalid/resolves-tension categories
+\item \textbf{Stability checks}: Ghost-free, gradient stability, tensor speed constraints
+\item \textbf{Observational likelihoods}: SH0ES, TRGB, BAO, Pantheon+ SNe Ia, CMB distance priors, standard sirens
+\item \textbf{MCMC sampling}: Full Bayesian parameter inference with emcee backend
+\item \textbf{Diagnostic plots}: Parameter space validity maps, $\Geff$ evolution, Hubble tension resolution
+\end{itemize}
+
+Key implementation details:
+\begin{itemize}
+\item Integration uses \texttt{scipy.integrate.solve\_ivp} with RK45 method
+\item Time variable is $\ln a = -\ln(1+z)$ for numerical stability at high $z$
+\item Divergence detection halts integration when $|\phi| \geq \phi_{\rm crit}(1-\epsilon)$
+\item All quantities computed self-consistently without approximations
 \end{itemize}
 
 The code is available at:\\

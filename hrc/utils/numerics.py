@@ -9,6 +9,163 @@ from numpy.typing import NDArray
 T = TypeVar("T", float, NDArray[np.floating])
 
 
+class GeffDivergenceError(Exception):
+    """Raised when G_eff approaches divergence (phi -> phi_critical).
+
+    This occurs when the scalar field approaches the critical value
+    phi_c = 1/(8*pi*xi) where the effective gravitational coupling diverges.
+    """
+
+    def __init__(
+        self,
+        phi: float,
+        phi_critical: float,
+        z: Optional[float] = None,
+        message: Optional[str] = None,
+    ):
+        self.phi = phi
+        self.phi_critical = phi_critical
+        self.z = z
+        self.fraction = phi / phi_critical if phi_critical != 0 else float('inf')
+
+        if message is None:
+            z_str = f" at z={z:.2f}" if z is not None else ""
+            message = (
+                f"G_eff divergence: phi={phi:.6f} approaches critical value "
+                f"phi_c={phi_critical:.6f} (phi/phi_c={self.fraction:.4f}){z_str}"
+            )
+
+        super().__init__(message)
+
+
+@dataclass
+class GeffValidityResult:
+    """Result of G_eff validity check."""
+
+    valid: bool
+    phi: float
+    phi_critical: float
+    G_eff_ratio: Optional[float] = None
+    z: Optional[float] = None
+    message: str = ""
+
+    @property
+    def fraction_of_critical(self) -> float:
+        """Fraction phi/phi_critical."""
+        if self.phi_critical == 0:
+            return float('inf')
+        return abs(self.phi) / self.phi_critical
+
+
+def compute_critical_phi(xi: float) -> float:
+    """Compute the critical scalar field value where G_eff diverges.
+
+    phi_c = 1 / (8 * pi * xi)
+
+    Args:
+        xi: Non-minimal coupling constant
+
+    Returns:
+        Critical phi value (inf if xi <= 0)
+    """
+    if xi <= 0:
+        return float('inf')
+    return 1.0 / (8.0 * np.pi * xi)
+
+
+def check_geff_validity(
+    phi: float,
+    xi: float,
+    epsilon: float = 0.01,
+    z: Optional[float] = None,
+) -> GeffValidityResult:
+    """Check if phi is within safe bounds for G_eff computation.
+
+    G_eff = G / (1 - 8*pi*xi*phi) diverges when phi -> phi_c = 1/(8*pi*xi).
+    We flag as invalid if |phi| >= phi_c * (1 - epsilon).
+
+    Args:
+        phi: Scalar field value
+        xi: Non-minimal coupling constant
+        epsilon: Safety margin (default 0.01 = 1%)
+        z: Optional redshift for error reporting
+
+    Returns:
+        GeffValidityResult with validity status and G_eff if valid
+    """
+    phi_c = compute_critical_phi(xi)
+
+    if phi_c == float('inf'):
+        # xi <= 0: no divergence possible
+        G_eff_ratio = 1.0 / (1.0 - 8.0 * np.pi * xi * phi)
+        return GeffValidityResult(
+            valid=True,
+            phi=phi,
+            phi_critical=phi_c,
+            G_eff_ratio=G_eff_ratio,
+            z=z,
+            message="No divergence (xi <= 0)",
+        )
+
+    # Check if phi is too close to critical value
+    threshold = phi_c * (1.0 - epsilon)
+
+    if abs(phi) >= threshold:
+        return GeffValidityResult(
+            valid=False,
+            phi=phi,
+            phi_critical=phi_c,
+            G_eff_ratio=None,
+            z=z,
+            message=f"phi={phi:.6f} exceeds {(1-epsilon)*100:.1f}% of phi_c={phi_c:.6f}",
+        )
+
+    # Compute G_eff
+    denominator = 1.0 - 8.0 * np.pi * xi * phi
+    if abs(denominator) < 1e-10:
+        return GeffValidityResult(
+            valid=False,
+            phi=phi,
+            phi_critical=phi_c,
+            G_eff_ratio=None,
+            z=z,
+            message=f"Denominator too small: {denominator:.3e}",
+        )
+
+    G_eff_ratio = 1.0 / denominator
+
+    # Check for negative G_eff
+    if G_eff_ratio < 0:
+        return GeffValidityResult(
+            valid=False,
+            phi=phi,
+            phi_critical=phi_c,
+            G_eff_ratio=G_eff_ratio,
+            z=z,
+            message=f"G_eff/G = {G_eff_ratio:.4f} < 0 (negative gravity)",
+        )
+
+    # Check for unreasonably large G_eff
+    if G_eff_ratio > 10.0:
+        return GeffValidityResult(
+            valid=False,
+            phi=phi,
+            phi_critical=phi_c,
+            G_eff_ratio=G_eff_ratio,
+            z=z,
+            message=f"G_eff/G = {G_eff_ratio:.4f} > 10 (too large)",
+        )
+
+    return GeffValidityResult(
+        valid=True,
+        phi=phi,
+        phi_critical=phi_c,
+        G_eff_ratio=G_eff_ratio,
+        z=z,
+        message=f"Valid: G_eff/G = {G_eff_ratio:.4f}, phi/phi_c = {phi/phi_c:.4f}",
+    )
+
+
 @dataclass
 class NumericalConfig:
     """Configuration for numerical integration."""

@@ -26,6 +26,10 @@ from .utils.numerics import (
     check_positivity,
     safe_divide,
     DivergenceResult,
+    GeffDivergenceError,
+    GeffValidityResult,
+    compute_critical_phi,
+    check_geff_validity,
 )
 
 
@@ -77,6 +81,11 @@ class BackgroundSolution:
     message: str = ""
     divergence_info: Optional[DivergenceResult] = None
 
+    # G_eff validity tracking
+    geff_valid: bool = True
+    geff_divergence_z: Optional[float] = None  # Redshift where G_eff diverges
+    phi_critical: Optional[float] = None  # Critical phi value
+
     # Interpolators (created lazily)
     _H_interp: Optional[Callable[[float], float]] = field(default=None, repr=False)
     _phi_interp: Optional[Callable[[float], float]] = field(default=None, repr=False)
@@ -125,15 +134,18 @@ class BackgroundCosmology:
         self,
         params: HRCParameters,
         potential: Optional[PotentialConfig] = None,
+        geff_epsilon: float = 0.01,
     ):
         """Initialize background solver.
 
         Args:
             params: HRC model parameters
             potential: Scalar field potential configuration
+            geff_epsilon: Safety margin for G_eff divergence (default 1%)
         """
         self.params = params
         self.potential = potential or PotentialConfig(m=params.m_phi)
+        self.geff_epsilon = geff_epsilon
 
         # Validate parameters
         valid, errors = params.validate()
@@ -142,6 +154,27 @@ class BackgroundCosmology:
 
         # Precompute derived quantities
         self._8piG_xi = 8 * np.pi * params.xi  # For G_eff computation
+
+        # Compute critical phi value
+        self._phi_critical = compute_critical_phi(params.xi)
+        self._phi_threshold = self._phi_critical * (1.0 - geff_epsilon)
+
+    @property
+    def phi_critical(self) -> float:
+        """Critical scalar field value where G_eff diverges."""
+        return self._phi_critical
+
+    def check_phi_validity(self, phi: float, z: Optional[float] = None) -> GeffValidityResult:
+        """Check if phi is within safe bounds.
+
+        Args:
+            phi: Scalar field value
+            z: Optional redshift for error reporting
+
+        Returns:
+            GeffValidityResult with validity status
+        """
+        return check_geff_validity(phi, self.params.xi, self.geff_epsilon, z)
 
     def G_eff_ratio(self, phi: float) -> float:
         """Compute G_eff/G at given scalar field value.
@@ -315,6 +348,16 @@ class BackgroundCosmology:
         if z < 0:
             z = 0.0
 
+        # Check if phi is approaching critical value
+        if self._phi_critical != float('inf') and abs(phi) >= self._phi_threshold:
+            # Store the divergence info (only record the first occurrence)
+            if not self._hit_divergence:
+                self._hit_divergence = True
+                self._divergence_z = z
+                self._divergence_phi = phi
+            # Return zero derivatives to halt meaningful evolution
+            return np.array([0.0, 0.0])
+
         # First, estimate H from Friedmann equation
         # φ̇ = H · dφ/d(ln a)
         # We need to solve self-consistently
@@ -373,6 +416,32 @@ class BackgroundCosmology:
         Returns:
             BackgroundSolution with full evolution history
         """
+        # Initialize divergence tracking
+        self._hit_divergence = False
+        self._divergence_z = None
+        self._divergence_phi = None
+
+        # Check initial phi validity
+        initial_validity = self.check_phi_validity(self.params.phi_0, z=0.0)
+        if not initial_validity.valid:
+            return BackgroundSolution(
+                z=np.array([0.0]),
+                a=np.array([1.0]),
+                H=np.array([1.0]),
+                phi=np.array([self.params.phi_0]),
+                phi_dot=np.array([self.params.phi_dot_0]),
+                G_eff_ratio=np.array([np.nan]),
+                rho_m=np.array([self.params.Omega_m]),
+                rho_r=np.array([self.params.Omega_r]),
+                rho_phi=np.array([0.0]),
+                R=np.array([0.0]),
+                success=False,
+                message=f"Initial phi invalid: {initial_validity.message}",
+                geff_valid=False,
+                geff_divergence_z=0.0,
+                phi_critical=self._phi_critical,
+            )
+
         # Initial conditions at z=0
         phi_0 = self.params.phi_0
         phi_dot_0 = self.params.phi_dot_0
@@ -418,6 +487,9 @@ class BackgroundCosmology:
                     R=np.zeros_like(z_eval),
                     success=False,
                     message=f"Integration failed: {sol.message}",
+                    geff_valid=not self._hit_divergence,
+                    geff_divergence_z=self._divergence_z,
+                    phi_critical=self._phi_critical,
                 )
 
             # Extract solution
@@ -438,6 +510,9 @@ class BackgroundCosmology:
                 R=np.zeros_like(z_eval),
                 success=False,
                 message=f"Integration error: {str(e)}",
+                geff_valid=not self._hit_divergence,
+                geff_divergence_z=self._divergence_z,
+                phi_critical=self._phi_critical,
             )
 
         # Reconstruct all quantities from the solution
@@ -486,6 +561,16 @@ class BackgroundCosmology:
         # Check for divergences
         div_check = check_divergence(G_eff_ratio)
 
+        # Check if we hit G_eff divergence during integration
+        geff_valid = not self._hit_divergence
+        if self._hit_divergence:
+            message = (
+                f"G_eff divergence: phi approaches critical value "
+                f"phi_c={self._phi_critical:.6f} at z={self._divergence_z:.2f}"
+            )
+        else:
+            message = "Integration successful"
+
         return BackgroundSolution(
             z=z_eval,
             a=1.0 / (1.0 + z_eval),
@@ -497,9 +582,12 @@ class BackgroundCosmology:
             rho_r=rho_r,
             rho_phi=rho_phi,
             R=R,
-            success=True,
-            message="Integration successful",
+            success=geff_valid,  # Mark as failed if G_eff diverged
+            message=message,
             divergence_info=div_check if div_check.has_divergence else None,
+            geff_valid=geff_valid,
+            geff_divergence_z=self._divergence_z,
+            phi_critical=self._phi_critical,
         )
 
     def get_state(self, z: float, solution: BackgroundSolution) -> BackgroundState:

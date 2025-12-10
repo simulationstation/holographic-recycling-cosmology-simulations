@@ -6,6 +6,12 @@ from numpy.testing import assert_allclose
 
 from hrc.utils.config import HRCParameters, PotentialConfig
 from hrc.background import BackgroundCosmology, BackgroundSolution
+from hrc.utils.numerics import (
+    GeffDivergenceError,
+    GeffValidityResult,
+    compute_critical_phi,
+    check_geff_validity,
+)
 
 
 class TestHRCParameters:
@@ -85,9 +91,11 @@ class TestBackgroundCosmology:
         assert_allclose(ratio, 1.0, rtol=1e-10)
 
     def test_solve_success(self, standard_params):
-        """Background evolution should solve successfully."""
+        """Background evolution should solve successfully at low z."""
+        # Note: With standard HRC params (xi=0.03, phi_0=0.2), the scalar
+        # field evolves and diverges around z~3.5. Use z_max=2 for safe range.
         cosmo = BackgroundCosmology(standard_params)
-        solution = cosmo.solve(z_max=10, z_points=50)
+        solution = cosmo.solve(z_max=2, z_points=50)
         assert solution.success
 
     def test_solve_z_range(self, standard_params):
@@ -194,6 +202,210 @@ class TestPotentialConfig:
         V = pot.V(0.5)
         expected = 1.0 * np.exp(-2.0 * 0.5)
         assert_allclose(V, expected)
+
+
+class TestGeffDivergenceDetection:
+    """Tests for G_eff divergence detection during integration."""
+
+    def test_compute_critical_phi_positive_xi(self):
+        """Critical phi should be 1/(8πξ) for positive ξ."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+        expected = 1.0 / (8.0 * np.pi * xi)
+        assert_allclose(phi_c, expected, rtol=1e-10)
+
+    def test_compute_critical_phi_zero_xi(self):
+        """Critical phi should be inf for ξ=0."""
+        phi_c = compute_critical_phi(0.0)
+        assert phi_c == float('inf')
+
+    def test_compute_critical_phi_negative_xi(self):
+        """Critical phi should be inf for ξ<0."""
+        phi_c = compute_critical_phi(-0.1)
+        assert phi_c == float('inf')
+
+    def test_check_geff_validity_safe_region(self):
+        """Validity check should pass in safe region."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+        phi = phi_c * 0.5  # Well below critical
+
+        result = check_geff_validity(phi, xi)
+        assert result.valid
+        assert result.G_eff_ratio is not None
+        assert result.G_eff_ratio > 0
+
+    def test_check_geff_validity_near_critical(self):
+        """Validity check should fail near critical value."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+        phi = phi_c * 0.995  # Within 1% of critical (default epsilon)
+
+        result = check_geff_validity(phi, xi, epsilon=0.01)
+        assert not result.valid
+        assert "exceeds" in result.message.lower()
+
+    def test_check_geff_validity_beyond_critical(self):
+        """Validity check should fail beyond critical value."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+        phi = phi_c * 1.1  # Beyond critical
+
+        result = check_geff_validity(phi, xi)
+        assert not result.valid
+
+    def test_check_geff_validity_negative_geff(self):
+        """Validity check should detect negative G_eff."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+        phi = phi_c * 1.5  # Well beyond critical
+
+        # Use larger epsilon to allow computation
+        result = check_geff_validity(phi, xi, epsilon=0.8)
+        assert not result.valid
+        assert "negative" in result.message.lower() or result.G_eff_ratio is None
+
+    def test_background_cosmo_phi_critical_property(self):
+        """BackgroundCosmology should expose phi_critical."""
+        params = HRCParameters(xi=0.03, phi_0=0.2)
+        cosmo = BackgroundCosmology(params)
+
+        expected = compute_critical_phi(params.xi)
+        assert_allclose(cosmo.phi_critical, expected, rtol=1e-10)
+
+    def test_background_cosmo_valid_params_geff_valid(self):
+        """Valid parameters should produce geff_valid=True solution at low z."""
+        # Note: With xi=0.03, phi_0=0.2, the scalar field evolves toward
+        # the critical value and diverges around z~3.5. For a valid test,
+        # we use z_max=2 which is safely before the divergence.
+        params = HRCParameters(xi=0.03, phi_0=0.2)
+        cosmo = BackgroundCosmology(params)
+        solution = cosmo.solve(z_max=2, z_points=50)
+
+        assert solution.success
+        assert solution.geff_valid
+
+    def test_background_cosmo_near_critical_initial(self):
+        """Initial phi near critical should be flagged invalid."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+
+        # Set phi_0 to 95% of critical (within default 1% safety margin)
+        phi_0_near = phi_c * 0.995
+
+        params = HRCParameters(xi=xi, phi_0=phi_0_near)
+
+        # This should trigger validation failure
+        valid, errors = params.validate()
+
+        if valid:
+            # If params pass validation, solver should detect issue
+            cosmo = BackgroundCosmology(params, geff_epsilon=0.01)
+            solution = cosmo.solve(z_max=10, z_points=50)
+            # Either solution fails or geff_valid is False
+            assert not solution.geff_valid or not solution.success
+
+    def test_background_cosmo_diverging_evolution(self):
+        """Parameters causing phi to grow toward critical should be detected."""
+        # Use parameters where scalar field might grow during evolution
+        # Large initial velocity can cause this
+        xi = 0.1  # Larger coupling
+        phi_c = compute_critical_phi(xi)
+
+        # Start at 80% of critical
+        phi_0 = phi_c * 0.8
+
+        params = HRCParameters(xi=xi, phi_0=phi_0, h=0.7)
+        valid, _ = params.validate()
+
+        if valid:
+            cosmo = BackgroundCosmology(params, geff_epsilon=0.1)
+            solution = cosmo.solve(z_max=1100, z_points=200)
+
+            # The solution should track whether geff stayed valid
+            assert hasattr(solution, 'geff_valid')
+            assert hasattr(solution, 'phi_critical')
+
+            # If phi grew toward critical, geff_valid should be False
+            if solution.success:
+                max_phi = np.max(np.abs(solution.phi))
+                threshold = phi_c * 0.9
+                if max_phi >= threshold:
+                    assert not solution.geff_valid
+
+    def test_solution_tracks_divergence_redshift(self):
+        """Solution should track where divergence occurred."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+
+        # At z_max=2, the standard parameters should not diverge
+        params = HRCParameters(xi=xi, phi_0=0.2)
+        cosmo = BackgroundCosmology(params)
+        solution = cosmo.solve(z_max=2, z_points=50)
+
+        assert solution.geff_valid
+        assert solution.geff_divergence_z is None
+        assert solution.phi_critical is not None
+        assert_allclose(solution.phi_critical, phi_c, rtol=1e-10)
+
+    def test_solution_detects_divergence_at_high_z(self):
+        """Solution should detect divergence when phi evolves toward critical."""
+        xi = 0.03
+        phi_c = compute_critical_phi(xi)
+
+        # At z_max=10, the scalar field will evolve toward critical
+        params = HRCParameters(xi=xi, phi_0=0.2)
+        cosmo = BackgroundCosmology(params)
+        solution = cosmo.solve(z_max=10, z_points=100)
+
+        # The solution should detect that phi approached critical
+        assert not solution.geff_valid
+        assert solution.geff_divergence_z is not None
+        # Divergence should happen somewhere between z=3 and z=4
+        assert 3.0 < solution.geff_divergence_z < 5.0
+        assert solution.phi_critical is not None
+        assert_allclose(solution.phi_critical, phi_c, rtol=1e-10)
+
+    def test_geff_divergence_error_attributes(self):
+        """GeffDivergenceError should have useful attributes."""
+        phi = 0.4
+        phi_c = 0.5
+        z = 10.5
+
+        error = GeffDivergenceError(phi, phi_c, z)
+
+        assert error.phi == phi
+        assert error.phi_critical == phi_c
+        assert error.z == z
+        assert_allclose(error.fraction, phi / phi_c, rtol=1e-10)
+        assert "0.4" in str(error) or "phi" in str(error).lower()
+
+    def test_zero_xi_no_divergence_possible(self):
+        """With ξ=0, no divergence should ever occur."""
+        params = HRCParameters(xi=0.0, phi_0=1.0)  # Large phi, but ξ=0
+        cosmo = BackgroundCosmology(params)
+        solution = cosmo.solve(z_max=100, z_points=50)
+
+        assert solution.success
+        assert solution.geff_valid
+        assert cosmo.phi_critical == float('inf')
+
+    def test_custom_geff_epsilon(self):
+        """Custom geff_epsilon should be respected."""
+        params = HRCParameters(xi=0.03, phi_0=0.2)
+
+        # Strict epsilon
+        cosmo_strict = BackgroundCosmology(params, geff_epsilon=0.1)
+        # Lax epsilon
+        cosmo_lax = BackgroundCosmology(params, geff_epsilon=0.001)
+
+        phi_c = cosmo_strict.phi_critical
+
+        # Strict has larger safety margin
+        strict_threshold = phi_c * 0.9
+        lax_threshold = phi_c * 0.999
+
+        assert strict_threshold < lax_threshold
 
 
 if __name__ == "__main__":
