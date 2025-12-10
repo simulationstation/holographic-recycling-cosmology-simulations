@@ -40,11 +40,18 @@ class CouplingFamily(Enum):
         - Always positive
         - F' = beta*M_pl*exp(beta*phi/M_pl)
 
+    PLATEAU_EVAP: F = M_pl^2 * (1 + xi * (1 - exp(-(phi/mu)^2)))
+        - Evaporated-boundary-inspired coupling
+        - f(0) = 0 -> pure GR at vacuum (outer evaporated region)
+        - f(|phi| >> mu) -> 1 -> shifted effective Planck mass inside
+        - Always positive for xi > -1
+
     CUSTOM: User-defined F(phi)
     """
     LINEAR = "linear"
     QUADRATIC = "quadratic"
     EXPONENTIAL = "exponential"
+    PLATEAU_EVAP = "plateau_evap"
     CUSTOM = "custom"
 
 
@@ -186,9 +193,10 @@ class HRC2Parameters:
     potential_type: PotentialType = PotentialType.QUADRATIC
 
     # Coupling parameters
-    xi: float = 1e-3  # Quadratic coupling
+    xi: float = 1e-3  # Quadratic coupling / plateau_evap amplitude
     alpha: float = 0.1  # Linear coupling (in M_pl units)
     beta: float = 0.1  # Exponential coupling
+    mu: float = 0.1  # Plateau_evap width scale (in M_pl units)
 
     # Potential parameters
     V0: float = 0.7  # Vacuum energy scale (in units of 3*H0^2*M_pl^2)
@@ -483,6 +491,115 @@ class ExponentialCouplingModel(ScalarTensorModel):
             return 0.0
 
 
+class PlateauEvapCouplingModel(ScalarTensorModel):
+    """Evaporated-boundary-inspired plateau coupling.
+
+    F(phi) = M_pl^2 * (1 + xi * f(phi))
+    where f(phi) = 1 - exp(-(phi/mu)^2)
+
+    This models a scenario where:
+    - f(0) = 0: At the vacuum (outer evaporated boundary), we have pure GR
+    - f(|phi| >> mu) -> 1: Inside our patch, effective Planck mass is shifted
+    - The transition scale mu controls how quickly we approach the plateau
+
+    Derivatives:
+        f'(phi) = (2*phi/mu^2) * exp(-(phi/mu)^2)
+        f''(phi) = (2/mu^2) * exp(-(phi/mu)^2) * (1 - 2*(phi/mu)^2)
+
+        F' = xi * M_pl^2 * f'(phi)
+        F'' = xi * M_pl^2 * f''(phi)
+    """
+
+    def __init__(self, params: HRC2Parameters):
+        self.params = params
+        self.xi = params.xi
+        self.mu = params.mu
+        self._setup_potential(params)
+
+    def _setup_potential(self, params: HRC2Parameters):
+        """Setup potential functions based on type."""
+        self.V0 = params.V0
+        self.m_phi = params.m_phi
+        self.M_scale = params.M_scale
+        self.lambda_exp = params.lambda_exp
+        self.n_plateau = params.n_plateau
+        self.alpha_tracker = params.alpha_tracker
+        self.potential_type = params.potential_type
+
+    @property
+    def name(self) -> str:
+        return f"plateau_evap_xi={self.xi:.2e}_mu={self.mu:.2e}"
+
+    def _f(self, phi: float) -> float:
+        """Coupling shape function f(phi) = 1 - exp(-(phi/mu)^2)."""
+        x = phi / self.mu
+        return 1.0 - np.exp(-x**2)
+
+    def _df(self, phi: float) -> float:
+        """Derivative df/dphi = (2*phi/mu^2) * exp(-(phi/mu)^2)."""
+        x = phi / self.mu
+        return (2.0 * phi / self.mu**2) * np.exp(-x**2)
+
+    def _d2f(self, phi: float) -> float:
+        """Second derivative d^2f/dphi^2."""
+        x = phi / self.mu
+        return (2.0 / self.mu**2) * np.exp(-x**2) * (1.0 - 2.0 * x**2)
+
+    def F(self, phi: float) -> float:
+        return M_PL_SQUARED * (1.0 + self.xi * self._f(phi))
+
+    def dF_dphi(self, phi: float) -> float:
+        return self.xi * M_PL_SQUARED * self._df(phi)
+
+    def d2F_dphi2(self, phi: float) -> float:
+        return self.xi * M_PL_SQUARED * self._d2f(phi)
+
+    def Z(self, phi: float) -> float:
+        return 1.0
+
+    def dZ_dphi(self, phi: float) -> float:
+        return 0.0
+
+    def V(self, phi: float) -> float:
+        return self._compute_V(phi)
+
+    def dV_dphi(self, phi: float) -> float:
+        return self._compute_dV(phi)
+
+    def _compute_V(self, phi: float) -> float:
+        if self.potential_type == PotentialType.QUADRATIC:
+            return self.V0 + 0.5 * self.m_phi**2 * phi**2
+        elif self.potential_type == PotentialType.PLATEAU:
+            x = phi / self.M_scale
+            return self.V0 * (1 - np.exp(-x))**self.n_plateau
+        elif self.potential_type == PotentialType.EXPONENTIAL:
+            return self.V0 * np.exp(-self.lambda_exp * phi / M_PL)
+        elif self.potential_type == PotentialType.TRACKER:
+            if abs(phi) < 1e-10:
+                return self.V0 * 1e10
+            return self.V0 / (abs(phi)**self.alpha_tracker)
+        else:
+            return self.V0
+
+    def _compute_dV(self, phi: float) -> float:
+        if self.potential_type == PotentialType.QUADRATIC:
+            return self.m_phi**2 * phi
+        elif self.potential_type == PotentialType.PLATEAU:
+            x = phi / self.M_scale
+            exp_term = np.exp(-x)
+            return (self.V0 * self.n_plateau / self.M_scale *
+                    (1 - exp_term)**(self.n_plateau - 1) * exp_term)
+        elif self.potential_type == PotentialType.EXPONENTIAL:
+            return -self.lambda_exp / M_PL * self.V0 * np.exp(-self.lambda_exp * phi / M_PL)
+        elif self.potential_type == PotentialType.TRACKER:
+            if abs(phi) < 1e-10:
+                return 0.0
+            sign = 1 if phi > 0 else -1
+            return -sign * self.alpha_tracker * self.V0 / (abs(phi)**(self.alpha_tracker + 1))
+        else:
+            return 0.0
+
+
 class CustomCouplingModel(ScalarTensorModel):
     """Custom user-defined coupling model.
 
@@ -554,6 +671,8 @@ def create_model(params: HRC2Parameters) -> ScalarTensorModel:
         return QuadraticCouplingModel(params)
     elif params.coupling_family == CouplingFamily.EXPONENTIAL:
         return ExponentialCouplingModel(params)
+    elif params.coupling_family == CouplingFamily.PLATEAU_EVAP:
+        return PlateauEvapCouplingModel(params)
     elif params.coupling_family == CouplingFamily.CUSTOM:
         return CustomCouplingModel(params)
     else:
