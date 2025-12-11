@@ -152,6 +152,89 @@ def compute_rho_EDE(
     return amp * scaling * bump
 
 
+def apply_epsilon_corr(
+    H_base: float,
+    z: float,
+    epsilon_corr: float,
+    z_transition: float = 3000.0,
+    transition_width: float = 500.0,
+) -> float:
+    """Apply early-time epsilon correction to Hubble parameter.
+
+    This correction models deviations from standard LCDM at high redshift,
+    potentially from primordial physics (e.g., no-boundary initial conditions).
+
+    The correction is:
+        H(z) = H_base * (1 + epsilon_corr * f(z))
+
+    where f(z) is a smooth transition function:
+        f(z) = 0 for z << z_transition
+        f(z) -> 1 for z >> z_transition
+
+    Using a tanh transition:
+        f(z) = 0.5 * (1 + tanh((z - z_transition) / transition_width))
+
+    Args:
+        H_base: Base Hubble parameter from standard Friedmann equation
+        z: Redshift
+        epsilon_corr: Fractional correction (can be positive or negative)
+        z_transition: Redshift where correction turns on (default: 3000)
+        transition_width: Width of the transition (default: 500)
+
+    Returns:
+        Corrected Hubble parameter H(z)
+
+    Notes:
+        - epsilon_corr > 0: H(z) larger at high-z, smaller sound horizon, higher inferred H0
+        - epsilon_corr < 0: H(z) smaller at high-z, larger sound horizon, lower inferred H0
+        - Typical values: |epsilon_corr| < 0.05 to remain consistent with CMB
+    """
+    if abs(epsilon_corr) < 1e-12:
+        return H_base
+
+    # Smooth transition function using tanh
+    f_z = 0.5 * (1.0 + np.tanh((z - z_transition) / transition_width))
+
+    # Apply correction
+    return H_base * (1.0 + epsilon_corr * f_z)
+
+
+def compute_sound_horizon_epsilon_effect(
+    epsilon_corr: float,
+    z_transition: float = 3000.0,
+    z_drag: float = 1059.94,
+) -> float:
+    """Estimate fractional change in sound horizon due to epsilon correction.
+
+    The sound horizon integral is r_s = integral c_s/H dz from z_drag to infinity.
+    If H is increased by a fraction epsilon at high z, r_s decreases roughly as:
+        delta_r_s / r_s ~ -epsilon_corr * (effective fraction of integral at z > z_transition)
+
+    This is a rough estimate; the actual effect depends on the full integral.
+
+    Args:
+        epsilon_corr: Fractional H(z) correction
+        z_transition: Transition redshift
+        z_drag: Drag epoch redshift
+
+    Returns:
+        Approximate fractional change in sound horizon
+    """
+    # Rough estimate: about 20% of the sound horizon integral comes from z > 3000
+    # (the exact fraction depends on cosmological parameters)
+    high_z_fraction = 0.20
+
+    if z_transition > z_drag * 2:
+        # If transition is well above drag epoch, most effect is on high-z tail
+        effective_fraction = high_z_fraction * 0.5
+    else:
+        effective_fraction = high_z_fraction
+
+    # delta_r_s / r_s ~ -epsilon * effective_fraction
+    # (negative because larger H means smaller r_s)
+    return -epsilon_corr * effective_fraction
+
+
 @dataclass
 class BackgroundSolution:
     """Solution of background cosmological evolution.
