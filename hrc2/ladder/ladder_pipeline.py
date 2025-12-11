@@ -30,24 +30,24 @@ class LadderFitResult:
     delta_H0: float         # H0_fit - H0_true
 
 
-def calibrate_M_B(
+def calibrate_M_B_from_mu(
     calib_sample: Dict[str, np.ndarray],
+    mu_calib: np.ndarray,
     params: SNSystematicParameters11B,
 ) -> float:
     """
-    Estimate M_B from calibrator sample with known distances.
+    Generic calibrator step: given observed SN quantities and
+    (possibly biased) distance moduli mu_calib, estimate M_B_fit.
 
     The fitter assumes:
-        m_B = M_B - alpha_fit * x1 + beta_fit * c + mu_true
+        m_B = M_B - alpha_fit * x1 + beta_fit * c + mu_calib
 
     So:
-        M_B_est = m_B + alpha_fit * x1 - beta_fit * c - mu_true
-
-    Note: The fitter uses fixed alpha_fit, beta_fit, and ignores
-    host mass step (sets delta_M_step_fit = 0 unless specified).
+        M_B_est = m_B + alpha_fit * x1 - beta_fit * c - mu_calib
 
     Args:
-        calib_sample: Calibrator SN sample (must have mu_true)
+        calib_sample: Calibrator SN sample
+        mu_calib: Distance moduli for calibrators (may include biases)
         params: Systematic parameters (uses alpha_fit, beta_fit)
 
     Returns:
@@ -56,10 +56,8 @@ def calibrate_M_B(
     m_B = calib_sample["m_B_obs"]
     x1 = calib_sample["x1"]
     c = calib_sample["c"]
-    mu_calib = calib_sample["mu_true"]  # Assumed known from Cepheids/TRGB
 
     # Naive fitter: no host mass step correction
-    # M_est = m_B + alpha_fit * x1 - beta_fit * c - mu_calib
     M_est = m_B + params.alpha_fit * x1 - params.beta_fit * c - mu_calib
 
     # If fitter assumes a host mass step, apply it
@@ -68,6 +66,27 @@ def calibrate_M_B(
         M_est[high_mass] = M_est[high_mass] - params.delta_M_step_fit
 
     return float(np.mean(M_est))
+
+
+def calibrate_M_B(
+    calib_sample: Dict[str, np.ndarray],
+    params: SNSystematicParameters11B,
+) -> float:
+    """
+    Estimate M_B from calibrator sample with known distances.
+
+    Backwards-compatible wrapper: uses true mu from cosmology
+    (no calibrator biases).
+
+    Args:
+        calib_sample: Calibrator SN sample (must have mu_true)
+        params: Systematic parameters (uses alpha_fit, beta_fit)
+
+    Returns:
+        Estimated M_B
+    """
+    mu_true = calib_sample["mu_true"]
+    return calibrate_M_B_from_mu(calib_sample, mu_true, params)
 
 
 def compute_standardized_mag(

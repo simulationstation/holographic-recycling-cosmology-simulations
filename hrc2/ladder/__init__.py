@@ -16,7 +16,8 @@ from .snia_salt2 import (
     simulate_snia_with_hosts,
     apply_magnitude_limit,
 )
-from .ladder_pipeline import LadderFitResult, run_ladder
+from .ladder_pipeline import LadderFitResult, run_ladder, calibrate_M_B_from_mu
+from .calibrator_bias import CalibratorBiasParameters, apply_calibrator_biases
 
 __all__ = [
     'TrueCosmology',
@@ -33,4 +34,7 @@ __all__ = [
     'apply_magnitude_limit',
     'LadderFitResult',
     'run_ladder',
+    'calibrate_M_B_from_mu',
+    'CalibratorBiasParameters',
+    'apply_calibrator_biases',
 ]

@@ -1,0 +1,176 @@
+{
+  "stats": {
+    "all": {
+      "name": "All scenarios",
+      "count": 2187,
+      "max": 4.799999999999997,
+      "mean": 1.8658893461362596,
+      "median": 1.7999999999999972,
+      "std": 0.9747745088157208
+    },
+    "realistic": {
+      "name": "Realistic (SN + calib)",
+      "count": 128,
+      "max": 2.200000000000003,
+      "mean": 0.9609374999999997,
+      "median": 0.9000000000000057,
+      "std": 0.5788234800815794
+    },
+    "moderate": {
+      "name": "Moderate (SN + calib)",
+      "count": 2187,
+      "max": 4.799999999999997,
+      "mean": 1.8658893461362596,
+      "median": 1.7999999999999972,
+      "std": 0.9747745088157208
+    },
+    "sn_realistic": {
+      "name": "SN realistic only",
+      "count": 432,
+      "max": 3.0999999999999943,
+      "mean": 1.3997685185185187,
+      "median": 1.4000000000000057,
+      "std": 0.7588215413399313
+    },
+    "calib_realistic": {
+      "name": "Calib realistic only",
+      "count": 648,
+      "max": 3.8999999999999986,
+      "mean": 1.4304012345679011,
+      "median": 1.4000000000000057,
+      "std": 0.8290548460604125
+    }
+  },
+  "counts": {
+    "all_ge_2.0": 1009,
+    "realistic_ge_2.0": 7,
+    "moderate_ge_2.0": 1009,
+    "all_ge_3.0": 311,
+    "realistic_ge_3.0": 0,
+    "moderate_ge_3.0": 311,
+    "all_ge_4.0": 39,
+    "realistic_ge_4.0": 0,
+    "moderate_ge_4.0": 39,
+    "all_ge_5.0": 0,
+    "realistic_ge_5.0": 0,
+    "moderate_ge_5.0": 0,
+    "all_ge_6.0": 0,
+    "realistic_ge_6.0": 0,
+    "moderate_ge_6.0": 0
+  },
+  "top_5_positive": [
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.1,
+      "delta_step": 0.0,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.0,
+      "k_mu_Z": 0.0,
+      "delta_mu_crowd": 0.0,
+      "delta_H0": 1.5,
+      "H0_fit": 69.0
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.1,
+      "delta_step": 0.0,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.0,
+      "k_mu_Z": 0.03,
+      "delta_mu_crowd": 0.0,
+      "delta_H0": 1.5,
+      "H0_fit": 69.0
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.1,
+      "delta_step": 0.0,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.0,
+      "k_mu_Z": 0.06,
+      "delta_mu_crowd": 0.0,
+      "delta_H0": 1.4000000000000057,
+      "H0_fit": 68.9
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.1,
+      "delta_step": 0.0,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.0,
+      "k_mu_Z": 0.0,
+      "delta_mu_crowd": 0.03,
+      "delta_H0": 1.2000000000000028,
+      "H0_fit": 68.7
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.1,
+      "delta_step": 0.0,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.0,
+      "k_mu_Z": 0.03,
+      "delta_mu_crowd": 0.03,
+      "delta_H0": 1.2000000000000028,
+      "H0_fit": 68.7
+    }
+  ],
+  "top_5_negative": [
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.0,
+      "delta_step": 0.1,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.04,
+      "k_mu_Z": 0.06,
+      "delta_mu_crowd": 0.03,
+      "delta_H0": -4.5,
+      "H0_fit": 63.0
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.1,
+      "delta_step": 0.1,
+      "delta_beta": 0.0,
+      "delta_mu_global": 0.04,
+      "k_mu_Z": 0.06,
+      "delta_mu_crowd": 0.06,
+      "delta_H0": -4.5,
+      "H0_fit": 63.0
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.0,
+      "delta_step": 0.1,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.04,
+      "k_mu_Z": 0.0,
+      "delta_mu_crowd": 0.06,
+      "delta_H0": -4.700000000000003,
+      "H0_fit": 62.8
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.0,
+      "delta_step": 0.1,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.04,
+      "k_mu_Z": 0.03,
+      "delta_mu_crowd": 0.06,
+      "delta_H0": -4.799999999999997,
+      "H0_fit": 62.7
+    },
+    {
+      "alpha_pop": 0.1,
+      "gamma_Z": 0.0,
+      "delta_step": 0.1,
+      "delta_beta": 0.3,
+      "delta_mu_global": 0.04,
+      "k_mu_Z": 0.06,
+      "delta_mu_crowd": 0.06,
+      "delta_H0": -4.799999999999997,
+      "H0_fit": 62.7
+    }
+  ],
+  "total_scenarios": 2187
+}
