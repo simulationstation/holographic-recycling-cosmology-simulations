@@ -13,17 +13,31 @@ This repository provides a rigorous, modular framework for quantitatively assess
 2. **Modified gravity / dark energy** models
 3. **Alternative cosmological priors** (e.g., Hawking-Hartle no-boundary)
 4. **JWST observations** improving distance calibration
+5. **Phenomenological expansion history modifications**
 
-### Key Result
+---
 
-**P(H₀ ≥ 73 km/s/Mpc | ΛCDM + all known systematics) ≈ 0.27%**
+## Executive Summary: Key Results
 
-Even when marginalizing over generous priors on all identified systematic uncertainties in the Type Ia supernova distance ladder, the probability of obtaining the SH0ES value of H₀ remains below 0.3%. This strongly suggests that:
-- The Hubble tension is not a result of known measurement systematics
-- JWST improvements to Cepheid photometry will not resolve the tension
-- New physics or unidentified systematics are required
+| Hypothesis Tested | Result | P(H₀ ≥ 73) |
+|-------------------|--------|------------|
+| Known distance ladder systematics | **NEGATIVE** | 0.27% |
+| JWST crowding improvements | **NEGATIVE** | < 1% |
+| Modified gravity (scalar-tensor) | **NEGATIVE** | Max ΔH₀ ~ 3.5 km/s/Mpc |
+| Hawking-Hartle no-boundary prior | **NEGATIVE** | 0.14% |
+| Black-hole interior cosmology (BITCC) | **NEGATIVE** | 0.00% |
+| Multi-mode expansion modifications | **NEGATIVE** | 0.00% |
+| ALP-EDE (axion-like particles) | **PARTIAL** | Requires f_EDE > 10% |
+| Entropic/emergent metric effects | **NEGATIVE** | Pushes H₀ lower |
 
-## Simulation Suite
+**Bottom Line:** No tested mechanism can reconcile CMB + BAO + SN data with H₀ ≥ 73 km/s/Mpc. The Hubble tension appears to require either:
+- Unidentified systematic errors in local distance measurements
+- New physics not captured by these models
+- A statistical fluctuation (unlikely at ~5σ)
+
+---
+
+## Complete Simulation Suite
 
 ### Distance Ladder Systematics (SIM 11-15)
 
@@ -33,28 +47,106 @@ Even when marginalizing over generous priors on all identified systematic uncert
 | **SIM 11B** | Host galaxy mass step | δM_step = 0.02 ± 0.01 mag |
 | **SIM 11C** | Combined SN systematics | Multiple nuisance parameters |
 | **SIM 12** | Cepheid calibration | P-L relation, metallicity effects |
-| **SIM 13** | JWST crowding improvements | 50% reduction in crowding errors |
-| **SIM 14** | Anchor galaxy systematics | LMC, NGC 4258, MW anchors |
+| **SIM 13** | JWST crowding improvements | 50% reduction ≠ tension resolution |
+| **SIM 14** | Rest-frame misalignment bias | Small effect on H₀ |
 | **SIM 15** | **Joint hierarchical model** | **P(H₀ ≥ 73) = 0.27%** |
 
-### Hawking-Hartle No-Boundary Cosmology (SIM 16)
+### Fundamental Physics Priors (SIM 16-19)
 
-Explores whether structured priors from fundamental physics can affect H₀ inference:
+| Simulation | Description | Key Result |
+|------------|-------------|------------|
+| **SIM 16** | Hawking-Hartle no-boundary prior | P(H₀ ≥ 73) = 0.14%, prior pushes H₀ ↓ |
+| **SIM 17** | Unified distance ladder model | Systematics insufficient |
+| **SIM 18** | Boundary kernel effects | Negligible H₀ shift |
+| **SIM 19** | Boundary monopole viability | No viable high-H₀ configurations |
 
-| Simulation | Description | Status |
-|------------|-------------|--------|
-| **SIM 16A** | Prior predictive sampling | Ready |
-| **SIM 16B** | MCMC with epsilon_corr | Ready |
+### Beyond-ΛCDM Physics (SIM 20-25)
 
-### Modified Gravity / Dark Energy (HRC 2.0)
+| Simulation | Description | Key Result |
+|------------|-------------|------------|
+| **SIM 20** | ALP/EDE (axion-like particles) | Requires f_EDE > 10%, tension with BAO |
+| **SIM 21** | EMIC (emergent metric inflation) | H₀_eff ~ 65-68, pushes lower |
+| **SIM 22** | ERC (entropic response cosmology) | Cannot raise H₀ sufficiently |
+| **SIM 23** | SSHR (stochastic sound horizon) | Limited H₀ range achievable |
+| **SIM 24** | BITCC (black-hole interior cosmology) | P(H₀ ≥ 73) = 0.00% |
+| **SIM 25** | Multi-mode terminal spectrum | **No allowed configurations** |
 
-Tests whether scalar-tensor theories can resolve the tension:
+### Modified Gravity (HRC 2.0)
 
 | Model | Coupling | Result |
 |-------|----------|--------|
 | Linear | F(φ) = 1 - ξφ | Max ΔH₀ ~ 3.5 km/s/Mpc |
 | Quadratic | F(φ) = 1 - ξφ² | Similar ceiling |
 | Exponential | F(φ) = exp(-ξφ) | Constrained by BBN/PPN |
+
+---
+
+## Detailed Findings
+
+### 1. Distance Ladder Systematics Cannot Explain the Tension
+
+From SIM 15 (joint hierarchical analysis with 9 nuisance parameters):
+
+```
+H₀ posterior: 67.85 ± 1.76 km/s/Mpc
+
+P(H₀ ≥ 73) = 0.0027 (0.27%)
+P(H₀ ≥ 70) = 0.11 (11%)
+
+H₀ = 73 is at 2.9σ from the posterior mean
+```
+
+Even marginalizing over all known systematics (host mass step, Cepheid metallicity, crowding, calibration uncertainties), the probability of H₀ ≥ 73 remains below 0.3%.
+
+### 2. JWST Improvements Are Insufficient
+
+Even with JWST reducing crowding systematics by 50%:
+- The posterior shifts by only ~0.1 km/s/Mpc
+- P(H₀ ≥ 73) remains below 1%
+- The tension persists at >2.5σ
+
+### 3. Modified Gravity Has a Ceiling
+
+HRC 2.0 scalar-tensor analysis shows:
+- Maximum achievable ΔH₀ ~ 3.5 km/s/Mpc (insufficient for 6 km/s/Mpc gap)
+- BBN and solar system constraints limit G_eff variation
+- Single-field scalar-tensor theories cannot resolve the tension
+
+### 4. Fundamental Physics Priors Push H₀ Lower
+
+**SIM 16 (Hawking-Hartle No-Boundary):**
+- Prior naturally prefers low H₀ values
+- P(H₀ ≥ 73) = 0.14% under no-boundary prior
+- The cosmological measure problem disfavors high-H₀ universes
+
+**SIM 24 (BITCC - Black-Hole Interior Cosmology):**
+- χ_trans (computational residue) maps to H_init
+- Prior mean H₀ = 64.4 km/s/Mpc
+- P(H₀ ≥ 73) = 0.14% prior, 0.00% posterior
+- Data compatibility pushes toward Planck value (67.5)
+
+### 5. Phenomenological Expansion Modifications Are Highly Constrained
+
+**SIM 25 (Multi-Mode Terminal Spectrum):**
+```
+Model: δH/H(a) = Σ_i A_i * f_i(ln a; μ_i, σ_i)
+```
+- 3-mode template at z ~ 3000, 100, 1
+- Amplitude range ±5%
+- **Result: ZERO configurations pass all constraints (θ*, BAO, SN)**
+- The CMB acoustic angle θ* is extremely constraining
+
+The tightly measured CMB acoustic scale (θ* = 0.01041 ± 0.00003 rad) leaves essentially no room for modifications to H(z) that would shift the inferred H₀.
+
+### 6. Early Dark Energy Requires Fine-Tuning
+
+**SIM 20 (ALP-EDE):**
+- Axion-like early dark energy can raise H₀
+- But requires f_EDE > 10% (fraction at z ~ 3000)
+- Creates tension with BAO measurements
+- Not a clean solution
+
+---
 
 ## Installation
 
@@ -79,31 +171,25 @@ pip install -e .
 
 ## Quick Start
 
-### Run the main result (SIM 15)
+### Run the main systematics result (SIM 15)
 
 ```bash
-# Joint hierarchical systematics analysis
 python scripts/run_sim15_joint_hierarchical.py --n-walkers 40 --n-steps 5000
-
-# Analyze results
 python scripts/analyze_sim15_joint_systematics_results.py
 ```
 
-### Prior predictive sampling (SIM 16A)
+### Run phenomenological expansion scan (SIM 25)
 
 ```bash
-# Sample from Hawking-Hartle no-boundary prior
-python scripts/run_sim16a_prior_predictive.py --n-samples 1000
+python scripts/run_sim25a_mode_spectrum_scan.py --n-grid 9
+python scripts/run_sim25b_inverse_mode_fit.py --n-samples 2000
+python scripts/analyze_sim25_results.py
 ```
 
-### Compare with/without JWST
+### Run no-boundary cosmology (SIM 16)
 
 ```bash
-# Pre-JWST systematics
-python scripts/run_sim15_joint_hierarchical.py --sigma-crowd 0.05
-
-# Post-JWST (improved crowding)
-python scripts/run_sim15_joint_hierarchical.py --sigma-crowd 0.025
+python scripts/run_sim16a_prior_predictive.py --n-samples 1000
 ```
 
 ## Project Structure
@@ -112,77 +198,28 @@ python scripts/run_sim15_joint_hierarchical.py --sigma-crowd 0.025
 .
 ├── hrc2/                          # Core cosmology modules
 │   ├── ladder/                    # Distance ladder likelihood
-│   │   ├── cosmology_baseline.py  # ΛCDM background
-│   │   ├── sn_systematics.py      # SN Ia systematics
-│   │   ├── cepheid_model.py       # Cepheid P-L relation
-│   │   └── joint_likelihood.py    # Full hierarchical model
-│   │
-│   ├── theory/                    # No-boundary cosmology
-│   │   ├── no_boundary_prior.py   # Hawking-Hartle prior
-│   │   └── no_boundary_to_cosmo.py # Parameter mapping
-│   │
-│   ├── background.py              # ODE-based Friedmann solver
-│   ├── cobaya_noboundary_model.py # Cobaya Theory wrapper
-│   └── ...
+│   ├── noboundary/                # Hawking-Hartle no-boundary
+│   ├── terminal_spectrum/         # Multi-mode expansion (SIM 25)
+│   ├── bitcc/                     # Black-hole interior cosmology (SIM 24)
+│   ├── layered/                   # Layered expansion model
+│   ├── alp/                       # ALP-EDE model (SIM 20)
+│   ├── metric/                    # Emergent metric (SIM 21)
+│   ├── entropy/                   # Entropic response (SIM 22)
+│   └── background.py              # Friedmann solver
 │
 ├── scripts/                       # Simulation scripts
-│   ├── run_sim11a_*.py           # SIM 11 variants
-│   ├── run_sim12_*.py            # SIM 12 Cepheid
-│   ├── run_sim13_*.py            # SIM 13 JWST
-│   ├── run_sim14_*.py            # SIM 14 anchors
-│   ├── run_sim15_*.py            # SIM 15 joint hierarchical
-│   ├── run_sim16a_*.py           # SIM 16A prior predictive
-│   ├── run_sim16b_*.py           # SIM 16B MCMC
-│   └── analyze_*.py              # Analysis scripts
+│   ├── run_sim*.py               # Simulation drivers
+│   └── analyze_sim*.py           # Analysis scripts
 │
-├── paper/                         # LaTeX paper and figures
-│   ├── main.tex                  # "JWST won't solve Hubble tension"
-│   ├── images/                   # PNG figures
-│   └── generate_figures.py       # Figure generation
+├── tests/                         # Unit tests
+│   └── test_*.py                 # pytest test files
 │
 ├── results/                       # Output directories
-│   ├── simulation_15_*/          # SIM 15 MCMC chains
-│   ├── simulation_16a_*/         # SIM 16A samples
-│   └── ...
+│   └── simulation_*/             # Per-simulation results
 │
-└── cobaya_configs/                # Cobaya YAML files
+└── figures/                       # Generated plots
+    └── simulation_*/             # Per-simulation figures
 ```
-
-## Key Findings
-
-### 1. Systematics Cannot Explain the Tension
-
-From SIM 15 (joint hierarchical analysis with 9 nuisance parameters):
-
-```
-H₀ posterior: 67.85 ± 1.76 km/s/Mpc
-
-P(H₀ ≥ 73) = 0.0027 (0.27%)
-P(H₀ ≥ 70) = 0.11 (11%)
-
-H₀ = 73 is at 2.9σ from the posterior mean
-```
-
-### 2. JWST Improvements Are Insufficient
-
-Even with JWST reducing crowding systematics by 50%:
-- The posterior shifts by only ~0.1 km/s/Mpc
-- P(H₀ ≥ 73) remains below 1%
-- The tension persists at >2.5σ
-
-### 3. Modified Gravity Has a Ceiling
-
-HRC 2.0 scalar-tensor analysis shows:
-- Maximum achievable ΔH₀ ~ 3.5 km/s/Mpc (insufficient for 6 km/s/Mpc gap)
-- BBN and solar system constraints limit G_eff variation
-- The "no-go theorem" prevents single-field scalar-tensor resolution
-
-### 4. No-Boundary Prior Effects
-
-SIM 16 explores whether Hawking-Hartle priors affect H₀:
-- epsilon_corr modifies H(z) at z > 3000 (pre-recombination)
-- This affects the sound horizon and CMB-inferred H₀
-- Results pending...
 
 ## Reproducibility
 
@@ -192,9 +229,31 @@ All simulations use fixed random seeds for reproducibility:
 # Default seeds
 SIM_15_SEED = 20241215
 SIM_16_SEED = 20241210
+SIM_25_SEED = 12345
 ```
 
-Results can be exactly reproduced by running the scripts with default parameters.
+Results can be exactly reproduced by running scripts with default parameters.
+
+## Conclusions
+
+After extensive testing of:
+- **9 systematic error parameters** in the distance ladder
+- **5 beyond-ΛCDM physics models**
+- **3 fundamental physics prior frameworks**
+- **1 general phenomenological expansion parameterization**
+
+We find **no mechanism that can reconcile CMB + BAO + SN + local H₀ data**. The Hubble tension remains robust at ~5σ.
+
+**Implications:**
+1. The tension is unlikely to be resolved by JWST or improved measurements
+2. Single-field modified gravity cannot bridge the gap
+3. Alternative priors from fundamental physics (no-boundary, BITCC) make the tension worse
+4. The CMB acoustic scale θ* is extremely constraining on any H(z) modifications
+
+The most likely resolutions are:
+- Unidentified systematic errors in SH0ES (not in our model space)
+- Multi-field new physics with specific features (e.g., interacting dark sector)
+- The tension is a genuine ~5σ statistical fluctuation
 
 ## Dependencies
 
@@ -209,17 +268,6 @@ Optional:
 - cobaya >= 3.0 (for Planck/BAO likelihoods)
 - camb >= 1.0 (for CMB calculations)
 - corner (for triangle plots)
-
-## Citation
-
-```bibtex
-@software{hubble_tension_analysis_2025,
-  title={Hubble Tension Analysis Framework: JWST, Systematics, and Beyond},
-  author={Smith, Aiden B.},
-  year={2025},
-  url={https://github.com/your-repo/hubble-tension-analysis}
-}
-```
 
 ## References
 
