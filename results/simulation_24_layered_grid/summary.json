@@ -1,0 +1,25 @@
+{
+  "total_samples": 10,
+  "physical_models": 10,
+  "passing_models": 4,
+  "fraction_passing": 0.4,
+  "models_with_H0_ge_73": 0,
+  "passing_with_H0_ge_73": 0,
+  "H0_distribution_all": {
+    "min": 60.9152562382933,
+    "max": 68.89297256413646,
+    "mean": 66.80644237836042,
+    "std": 2.208260560891944,
+    "median": 67.27936171191891
+  },
+  "H0_distribution_passing": {
+    "min": 60.9152562382933,
+    "max": 68.74453389627844,
+    "mean": 65.63659956359254,
+    "std": 2.922130313739248,
+    "median": 66.44330405989919
+  },
+  "max_H0_among_passing": 68.74453389627844,
+  "chi2_baseline": 3922.8319775387426,
+  "best_high_h0_model": null
+}
