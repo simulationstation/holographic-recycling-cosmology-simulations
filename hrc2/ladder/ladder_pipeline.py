@@ -228,3 +228,41 @@ def run_ladder(
         H0_true=cosmo_true.H0,
         delta_H0=delta_H0,
     )
+
+
+def run_two_step_ladder_with_cepheid_chain(
+    calib_sample: Dict[str, np.ndarray],
+    flow_sample: Dict[str, np.ndarray],
+    sn_params: SNSystematicParameters11B,
+    cepheid_mu_calib: np.ndarray,
+    H0_true: float = 67.5,
+    Omega_m: float = 0.315,
+) -> Tuple[float, float, float, float, int]:
+    """
+    Run two-step ladder with Cepheid/TRGB-derived calibrator distances.
+
+    This is the main entry point for SIM 12, using biased μ_calib from
+    the full Cepheid calibration chain.
+
+    Args:
+        calib_sample: Calibrator SN sample
+        flow_sample: Hubble flow SN sample
+        sn_params: SN systematic parameters
+        cepheid_mu_calib: Biased distance moduli from Cepheid/TRGB chain
+        H0_true: True H0 for computing bias
+        Omega_m: Matter density for H0 fit
+
+    Returns:
+        (M_B_fit, H0_fit, delta_H0, chi2_flow, dof_flow)
+    """
+    # Step 1: Calibrate M_B using Cepheid/TRGB-derived distances
+    M_B_fit = calibrate_M_B_from_mu(calib_sample, cepheid_mu_calib, sn_params)
+
+    # Step 2: Fit H0 from Hubble flow
+    H0_fit, chi2_flow, dof_flow = fit_H0_from_flow(
+        flow_sample, M_B_fit, sn_params
+    )
+
+    delta_H0 = H0_fit - H0_true
+
+    return M_B_fit, H0_fit, delta_H0, chi2_flow, dof_flow

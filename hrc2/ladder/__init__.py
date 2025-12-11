@@ -5,6 +5,12 @@ SIMULATION 11: Tests how SN Ia systematics (population drift, metallicity,
 dust miscalibration, Malmquist bias) affect the inferred H0.
 
 SIMULATION 11B: SH0ES-like two-step ladder with SALT2 model.
+
+SIMULATION 11C: Combined calibrator + SN systematics.
+
+SIMULATION 12: Full Cepheid/TRGB calibration chain.
+
+SIMULATION 13: HST vs JWST Cepheid recalibration test.
 """
 
 from .cosmology_baseline import TrueCosmology, mu_of_z
@@ -16,8 +22,42 @@ from .snia_salt2 import (
     simulate_snia_with_hosts,
     apply_magnitude_limit,
 )
-from .ladder_pipeline import LadderFitResult, run_ladder, calibrate_M_B_from_mu
+from .ladder_pipeline import (
+    LadderFitResult,
+    run_ladder,
+    calibrate_M_B_from_mu,
+    run_two_step_ladder_with_cepheid_chain,
+)
 from .calibrator_bias import CalibratorBiasParameters, apply_calibrator_biases
+from .cepheid_calibration import (
+    Anchor,
+    CepheidPLParameters,
+    CepheidHost,
+    TRGBParameters,
+    get_default_anchors,
+    get_default_cepheid_hosts,
+    compute_calibrator_mu_from_chain,
+    simulate_cepheid_magnitudes_and_colors,
+    generate_cepheid_data_for_host,
+    fit_PL_zero_point_from_instrument,
+    compute_host_mu_from_instrument_cepheids,
+)
+from .cepheid_systematics import (
+    CepheidSystematicParameters,
+    build_cepheid_pl_params,
+    build_trgb_params,
+    apply_full_cepheid_chain,
+    is_cepheid_realistic,
+    is_cepheid_moderate,
+)
+from .instrument_photometry import (
+    InstrumentPhotometrySystematics,
+    apply_instrument_effects,
+    compute_instrument_difference,
+    create_hst_baseline,
+    create_jwst_baseline,
+    create_jwst_with_systematics,
+)
 
 __all__ = [
     'TrueCosmology',
@@ -35,6 +75,32 @@ __all__ = [
     'LadderFitResult',
     'run_ladder',
     'calibrate_M_B_from_mu',
+    'run_two_step_ladder_with_cepheid_chain',
     'CalibratorBiasParameters',
     'apply_calibrator_biases',
+    # SIM 12: Cepheid/TRGB calibration
+    'Anchor',
+    'CepheidPLParameters',
+    'CepheidHost',
+    'TRGBParameters',
+    'get_default_anchors',
+    'get_default_cepheid_hosts',
+    'compute_calibrator_mu_from_chain',
+    'CepheidSystematicParameters',
+    'build_cepheid_pl_params',
+    'build_trgb_params',
+    'apply_full_cepheid_chain',
+    'is_cepheid_realistic',
+    'is_cepheid_moderate',
+    # SIM 13: Multi-instrument Cepheid photometry
+    'simulate_cepheid_magnitudes_and_colors',
+    'generate_cepheid_data_for_host',
+    'fit_PL_zero_point_from_instrument',
+    'compute_host_mu_from_instrument_cepheids',
+    'InstrumentPhotometrySystematics',
+    'apply_instrument_effects',
+    'compute_instrument_difference',
+    'create_hst_baseline',
+    'create_jwst_baseline',
+    'create_jwst_with_systematics',
 ]
