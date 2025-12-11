@@ -11,6 +11,8 @@ SIMULATION 11C: Combined calibrator + SN systematics.
 SIMULATION 12: Full Cepheid/TRGB calibration chain.
 
 SIMULATION 13: HST vs JWST Cepheid recalibration test.
+
+SIMULATION 15: Joint hierarchical systematics + H0 inference.
 """
 
 from .cosmology_baseline import TrueCosmology, mu_of_z
@@ -58,6 +60,24 @@ from .instrument_photometry import (
     create_jwst_baseline,
     create_jwst_with_systematics,
 )
+from .joint_systematics_model import (
+    JointSystematicsPriors,
+    JointSystematicsParameters,
+    theta_to_params,
+    params_to_theta,
+    log_prior as joint_log_prior,
+    sample_prior as joint_sample_prior,
+    PARAM_NAMES as JOINT_PARAM_NAMES,
+    NDIM as JOINT_NDIM,
+)
+from .joint_systematics_likelihood import (
+    SyntheticLadderData,
+    generate_synthetic_ladder_data,
+    compute_log_likelihood as joint_compute_log_likelihood,
+    log_posterior as joint_log_posterior,
+    test_log_posterior,
+    find_best_fit_H0_no_systematics,
+)
 
 __all__ = [
     'TrueCosmology',
@@ -103,4 +123,19 @@ __all__ = [
     'create_hst_baseline',
     'create_jwst_baseline',
     'create_jwst_with_systematics',
+    # SIM 15: Joint hierarchical systematics
+    'JointSystematicsPriors',
+    'JointSystematicsParameters',
+    'theta_to_params',
+    'params_to_theta',
+    'joint_log_prior',
+    'joint_sample_prior',
+    'JOINT_PARAM_NAMES',
+    'JOINT_NDIM',
+    'SyntheticLadderData',
+    'generate_synthetic_ladder_data',
+    'joint_compute_log_likelihood',
+    'joint_log_posterior',
+    'test_log_posterior',
+    'find_best_fit_H0_no_systematics',
 ]
