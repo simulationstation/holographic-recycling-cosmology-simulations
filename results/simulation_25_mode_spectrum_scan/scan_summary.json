@@ -1,0 +1,43 @@
+{
+  "summary": {
+    "n_total": 125,
+    "n_physical": 125,
+    "n_allowed": 0,
+    "fraction_allowed": 0.0,
+    "H0_allowed_mean": NaN,
+    "H0_allowed_std": NaN,
+    "H0_allowed_min": NaN,
+    "H0_allowed_max": NaN,
+    "n_H0_ge_71": 0,
+    "n_H0_ge_73": 0,
+    "best_config": {
+      "A1": 0.05,
+      "A2": -0.05,
+      "A3": -0.05,
+      "H0_eff": 67.26776443430974,
+      "chi2_total": 127555.43705550376,
+      "theta_star_dev_percent": 10.632336888942762,
+      "max_bao_dev_percent": 8.708032555661738
+    }
+  },
+  "config": {
+    "n_grid": 5,
+    "amp_min": -0.05,
+    "amp_max": 0.05,
+    "sigma_ln_a": 0.3,
+    "z_centers": [
+      3000,
+      100,
+      1
+    ],
+    "theta_star_tol": 3.0,
+    "bao_tol": 2.0,
+    "sn_tol": 2.0,
+    "cosmo": {
+      "H0": 67.5,
+      "Omega_m": 0.315,
+      "Omega_L": 0.685
+    }
+  },
+  "timestamp": "2025-12-11T11:51:50.823137"
+}

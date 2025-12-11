@@ -1,0 +1,54 @@
+{
+  "summary": {
+    "n_total_samples": 400,
+    "n_allowed": 0,
+    "fraction_allowed": 0.0,
+    "amplitude_stats": {
+      "A1": {
+        "mean": NaN,
+        "std": NaN
+      },
+      "A2": {
+        "mean": NaN,
+        "std": NaN
+      },
+      "A3": {
+        "mean": NaN,
+        "std": NaN
+      }
+    },
+    "H0_stats": {
+      "mean": NaN,
+      "std": NaN,
+      "min": NaN,
+      "max": NaN,
+      "n_ge_71": 0,
+      "n_ge_73": 0
+    },
+    "best_H0_config": null
+  },
+  "config": {
+    "n_samples": 200,
+    "amp_range": [
+      -0.05,
+      0.05
+    ],
+    "sigma_ln_a": 0.3,
+    "z_centers": [
+      3000,
+      100,
+      1
+    ],
+    "theta_star_tol": 3.0,
+    "bao_tol": 2.0,
+    "sn_tol": 2.0,
+    "refine_iterations": 1,
+    "seed": 12345,
+    "cosmo": {
+      "H0": 67.5,
+      "Omega_m": 0.315,
+      "Omega_L": 0.685
+    }
+  },
+  "timestamp": "2025-12-11T11:52:10.768939"
+}
